@@ -1,0 +1,99 @@
+{
+  "theme": "dark",
+  "brand_context": {
+    "name": "GOOD MOOD 3D — DJ SAYD",
+    "vibe": "Club, electronic, mysterious, premium, cinematic. Immersive 3D space with high energy neon accents over deep void.",
+    "positioning": "Paris • Caraïbes • World"
+  },
+  "typography": {
+    "fonts": {
+      "heading": "Bebas Neue, sans-serif",
+      "body": "Manrope, sans-serif",
+      "accent": "Space Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-7xl md:text-[8rem] leading-[0.8] tracking-tighter uppercase font-heading",
+      "h2": "text-5xl md:text-6xl leading-none tracking-tight uppercase font-heading",
+      "h3": "text-2xl md:text-3xl uppercase font-heading tracking-wide",
+      "body": "text-base md:text-lg text-text-secondary font-body font-light leading-relaxed",
+      "meta": "text-xs md:text-sm text-primary font-accent uppercase tracking-[0.2em]"
+    },
+    "instructions": "Import Bebas Neue, Manrope, and Space Mono from Google Fonts. Bebas Neue is exclusively for heavy display text (Titles, giant buttons). Manrope handles legibility. Space Mono handles technical details (dates, cities, tickets)."
+  },
+  "colors": {
+    "background": {
+      "base": "#050505",
+      "surface": "rgba(20, 20, 20, 0.55)",
+      "surface_hover": "rgba(35, 35, 35, 0.65)"
+    },
+    "brand": {
+      "primary": "#FF5A1F",
+      "secondary": "#C81E3A",
+      "gradient_primary": "linear-gradient(90deg, #FF5A1F, #C81E3A)"
+    },
+    "text": {
+      "primary": "#FAFAFA",
+      "secondary": "#A3A3A3",
+      "muted": "#555555"
+    }
+  },
+  "surfaces": {
+    "glass_panel": "bg-[#141414]/55 backdrop-blur-[20px] border border-white/5 rounded-2xl shadow-2xl shadow-black/50",
+    "glass_panel_hover": "hover:bg-[#141414]/75 hover:border-white/10 transition-colors duration-300",
+    "solid_admin": "bg-[#0A0A0A] border border-white/10 rounded-xl"
+  },
+  "layout_strategy": {
+    "desktop": "Split-panel architecture. The left side (50vw) is fixed (`sticky top-0 h-screen`), housing the 3D Three.js canvas and the massive 'GOOD MOOD' typography overlay. The right side (50vw) is independently scrollable, housing the Catalogue grids, Tour dates, and Newsletter modules.",
+    "mobile": "Sequential stacking. The hero section takes `h-[80vh]` at the top with the 3D background. The scrollable content follows directly below it. Ensure `overflow-x-hidden` on the main container.",
+    "spacing": "Generous spacing. Use `gap-8`, `p-8`, `py-24`. Never cramp the glass panels."
+  },
+  "components_instructions": {
+    "button_primary": "Pill-shaped, energetic. `bg-gradient-to-r from-[#FF5A1F] to-[#C81E3A] rounded-full px-8 py-4 font-heading text-2xl tracking-wider text-white shadow-[0_0_20px_rgba(255,90,31,0.3)] hover:shadow-[0_0_30px_rgba(255,90,31,0.5)] hover:scale-[1.02] transition-all duration-300`.",
+    "catalogue_card": "Apply `glass_panel` styles. Inside: An aspect-square image wrapper (overflow-hidden, rounded-t-2xl). The image should scale up gently on group hover. Below the image: A padding area `p-6` with `Space Mono` volume tag, `Bebas Neue` title, and a subtle listen link.",
+    "tour_list_item": "Row layout. `border-b border-white/5 py-6 flex items-center justify-between group hover:bg-white/[0.02] transition-colors`. Left: Date (`Space Mono`, text-primary). Middle: City/Venue (`Manrope`, bold city, muted venue). Right: Ticket Button (Ghost or Primary depending on availability).",
+    "header_nav": "Fixed `w-full z-50 p-6 flex justify-between items-center`. Use `glass_panel` but completely strip the background if it's over the 3D canvas, OR use a subtle gradient mask. Include Language Switcher (FR/EN/ES/KR) as a sleek dropdown using Space Mono."
+  },
+  "motion_and_3d": {
+    "libraries": ["three", "@react-three/fiber", "@react-three/drei", "framer-motion"],
+    "hero_3d_background": "Implement a particle system using `@react-three/fiber`. Use `<Points>` and `<PointMaterial>` with color `#FF5A1F`. The particles should form an abstract wave or nebula. In `useFrame`, map the mouse coordinates (`state.pointer`) to slightly rotate the camera or push/pull particles to create a highly reactive, premium feel.",
+    "page_transitions": "Use `framer-motion` to stagger the entrance of the right-panel glass cards. Delay the card entrance by 0.1s sequentially."
+  },
+  "admin_panel": {
+    "layout": "Standard sidebar layout, bypassing the split-panel. Keep it strictly utilitarian.",
+    "theme": "Deep black `#050505` background, `#0A0A0A` cards, `#FF5A1F` exclusively for active states and primary actions.",
+    "typography": "Use `Manrope` for all admin interfaces to prioritize readability. Avoid `Bebas Neue` here except for the top-level brand mark.",
+    "functionality": "Tables for Catalogue CRUD, Tour CRUD, and Newsletter subscribers. Include a CSV export button (requires `Space Mono` font for data authenticity vibe)."
+  },
+  "accessibility": {
+    "contrast": "Ensure off-white text `#FAFAFA` maintains a 4.5:1 ratio against the `rgba(20,20,20,0.55)` background.",
+    "interactions": "All interactive elements (links, buttons, form inputs) MUST include a `data-testid` attribute for automated testing. Example: `data-testid='catalogue-play-btn'`.",
+    "focus": "Focus states should use an outline of `#FF5A1F` with a 2px offset."
+  },
+  "media": {
+    "images": {
+      "hero_fallback": {
+        "url": "https://images.unsplash.com/photo-1709377195538-5522ed0f9e10?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTN8MHwxfHNlYXJjaHwzfHx2aW55bCUyMHJlY29yZCUyMGNvdmVyJTIwZGFyayUyMGFic3RyYWN0fGVufDB8fHx8MTc4NDc2OTM5Nnww&ixlib=rb-4.1.0&q=85",
+        "description": "Amber curves on dark background, use as a fallback if the 3D canvas fails to load."
+      },
+      "catalogue_covers": [
+        "https://images.pexels.com/photos/7605539/pexels-photo-7605539.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "https://images.unsplash.com/photo-1688494930045-328d0f95efe9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTN8MHwxfHNlYXJjaHw0fHx2aW55bCUyMHJlY29yZCUyMGNvdmVyJTIwZGFyayUyMGFic3RyYWN0fGVufDB8fHx8MTc4NDc2OTM5Nnww&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1556139930-c23fa4a4f934?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTN8MHwxfHNlYXJjaHwxfHx2aW55bCUyMHJlY29yZCUyMGNvdmVyJTIwZGFyayUyMGFic3RyYWN0fGVufDB8fHx8MTc4NDc2OTM5Nnww&ixlib=rb-4.1.0&q=85"
+      ],
+      "events_live": [
+        "https://images.unsplash.com/photo-1574155267225-3b5423dd45d9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHxlbGVjdHJvbmljJTIwbXVzaWMlMjBjbHViJTIwY3Jvd2R8ZW58MHx8fHwxNzg0NzY5Mzk2fDA&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1572327918400-f1932eded229?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwxfHxkaiUyMHBsYXlpbmclMjBsaXZlJTIwbmVvbiUyMG9yYW5nZXxlbnwwfHx8fDE3ODQ3NjkzOTZ8MA&ixlib=rb-4.1.0&q=85",
+        "https://images.pexels.com/photos/14646763/pexels-photo-14646763.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+      ]
+    }
+  },
+  "universal_guidelines_for_main_agent": [
+    "NEVER use generic centered layouts. Maintain the asymmetrical split-screen tension.",
+    "Do NOT use pure black (#000000). Always tint neutrals with #050505.",
+    "Do NOT use transparent backgrounds on headers that scroll over text. Use backdrop-blur with a tint.",
+    "Do NOT apply `transition: all`. Target specific properties like `transition-colors`, `transition-transform`.",
+    "Do NOT use emojis as icons. Use `lucide-react` or similar clean SVG icons.",
+    "Always provide `data-testid` on interactive elements.",
+    "Ensure the hero Three.js canvas has a defined height/width and doesn't break the CSS Grid."
+  ]
+}
