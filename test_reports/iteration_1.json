@@ -1,0 +1,30 @@
+{
+  "summary": "Phase 1 smoke test: All backend endpoints (public + admin CRUD + auth + newsletter CSV export) work. Frontend landing renders Hero3D canvas, 9 catalogue cards, 5 tour rows, newsletter submits with toast, FR->EN i18n switch works (REJOINDRE -> JOIN IN). Admin login/dashboard/logout flow works. Zero console errors.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "GET /api/catalogue returns 9 volumes with required fields",
+    "GET /api/tour returns 5 dates with id, city, venue, date, status",
+    "POST /api/newsletter valid email -> {ok:true, already:false}; duplicate -> {ok:true, already:true}",
+    "POST /api/auth/login valid creds returns 200 with token + user{email,role}",
+    "POST /api/auth/login wrong password returns 401 Invalid credentials",
+    "GET /api/auth/me with Bearer returns admin user",
+    "GET /api/admin/catalogue without token -> 401; with token -> 9 items",
+    "Catalogue CRUD: POST/PUT/DELETE full cycle succeeds (PUT requires full body - non-partial)",
+    "Tour CRUD: POST/PUT/DELETE full cycle succeeds",
+    "GET /api/admin/newsletter returns {count, items}",
+    "GET /api/admin/newsletter/export returns text/csv with content-disposition attachment; filename=newsletter.csv",
+    "Landing: Hero3D canvas mounts, GOOD MOOD visible, 9 catalogue cards, 5 tour items, newsletter submit shows Sonner toast",
+    "i18n FR->EN: hero-cta-btn text switches REJOINDRE -> JOIN IN",
+    "Admin login redirects to /admin, 3 tabs visible (catalogue/tour/newsletter), logout redirects to /admin/login",
+    "Zero browser console errors on landing + admin"
+  ],
+  "failed": [],
+  "observations": [
+    "PUT /api/admin/catalogue/{id} and PUT /api/admin/tour/{id} require ALL fields (Pydantic model non-optional). If admin UI sends partial patch it will 422. Consider Optional fields for partial updates if needed.",
+    "POST /api/admin/catalogue expects number as string (not int) per Pydantic model."
+  ],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}
