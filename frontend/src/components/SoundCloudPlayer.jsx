@@ -44,6 +44,9 @@ export default function SoundCloudPlayer({ open, onClose, trackUrl, title, volum
     if (!open || !trackUrl) return;
     let cancelled = false;
 
+    const onKey = (e) => { if (e.key === "Escape") onClose?.(); };
+    window.addEventListener("keydown", onKey);
+
     loadSoundCloudApi().then(() => {
       if (cancelled || !iframeRef.current) return;
       const w = window.SC.Widget(iframeRef.current);
@@ -63,6 +66,7 @@ export default function SoundCloudPlayer({ open, onClose, trackUrl, title, volum
 
     return () => {
       cancelled = true;
+      window.removeEventListener("keydown", onKey);
       if (widgetRef.current) {
         try {
           widgetRef.current.pause();
