@@ -58,33 +58,45 @@ export default function Catalogue() {
               </div>
             </div>
             <div className="p-5">
-              <h3 className="font-display text-2xl mb-1 leading-none">{v.title}</h3>
-              <p className="text-xs text-white/50 mb-4 line-clamp-2 min-h-[2.5rem]">{v.description}</p>
-              {v.listen_url ? (
-                isSoundCloud(v.listen_url) ? (
-                  <button
-                    onClick={() => setPlaying(v)}
-                    className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-[#FF5A1F] hover:text-white transition-colors"
-                    data-testid={`catalogue-listen-${v.number}`}
-                  >
-                    <Play size={12} /> {t("catalogue.listen")}
-                  </button>
+              <div className="flex items-baseline justify-between gap-2 mb-1">
+                <h3 className="font-display text-2xl leading-none">{v.title}</h3>
+                {v.year && (
+                  <span className="font-mono text-[10px] tracking-widest text-white/40">{v.year}</span>
+                )}
+              </div>
+              <p className="text-xs text-white/50 mb-3 line-clamp-2 min-h-[2.5rem]">{v.description}</p>
+              <div className="flex items-center justify-between">
+                {v.listen_url ? (
+                  isSoundCloud(v.listen_url) ? (
+                    <button
+                      onClick={() => setPlaying(v)}
+                      className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-[#FF5A1F] hover:text-white transition-colors"
+                      data-testid={`catalogue-listen-${v.number}`}
+                    >
+                      <Play size={12} /> {t("catalogue.listen")}
+                    </button>
+                  ) : (
+                    <a
+                      href={v.listen_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-[#FF5A1F] hover:text-white transition-colors"
+                      data-testid={`catalogue-listen-${v.number}`}
+                    >
+                      <Play size={12} /> {t("catalogue.listen")}
+                    </a>
+                  )
                 ) : (
-                  <a
-                    href={v.listen_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-[#FF5A1F] hover:text-white transition-colors"
-                    data-testid={`catalogue-listen-${v.number}`}
-                  >
-                    <Play size={12} /> {t("catalogue.listen")}
-                  </a>
-                )
-              ) : (
-                <span className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-white/30">
-                  <ExternalLink size={12} /> —
-                </span>
-              )}
+                  <span className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-white/30">
+                    <ExternalLink size={12} /> —
+                  </span>
+                )}
+                {v.plays && (
+                  <span className="font-mono text-[10px] tracking-widest text-white/40" data-testid={`catalogue-plays-${v.number}`}>
+                    {v.plays} PLAYS
+                  </span>
+                )}
+              </div>
             </div>
           </article>
         ))}
@@ -94,6 +106,7 @@ export default function Catalogue() {
         open={!!playing}
         onClose={() => setPlaying(null)}
         trackUrl={playing?.listen_url}
+        startTrack={playing?.sc_track}
         title={playing?.title || ""}
         volumeNumber={playing?.number || ""}
       />

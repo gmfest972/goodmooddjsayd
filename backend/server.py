@@ -75,9 +75,12 @@ class VolumeIn(BaseModel):
     model_config = ConfigDict(extra="ignore")
     number: str = Field(..., description="Volume number, e.g. '01'")
     title: str
+    year: Optional[str] = ""
+    plays: Optional[str] = ""
     description: Optional[str] = ""
     cover_url: Optional[str] = ""
     listen_url: Optional[str] = ""
+    sc_track: Optional[int] = None
     order: int = 0
 
 class Volume(VolumeIn):
@@ -242,24 +245,15 @@ async def admin_newsletter_export(_=Depends(get_current_admin)):
 
 # ---------- Startup ----------
 DEFAULT_VOLUMES = [
-    {"number": "01", "title": "GENESIS", "description": "The origin. Where Good Mood begins.", "order": 1,
-     "listen_url": "https://soundcloud.com/forss/flickermood"},
-    {"number": "02", "title": "NOCTURNE", "description": "After midnight sessions from Paris.", "order": 2,
-     "listen_url": "https://soundcloud.com/forss/journeyman"},
-    {"number": "03", "title": "TROPIC HEAT", "description": "Kompa meets club. Caraïbes energy.", "order": 3,
-     "listen_url": ""},
-    {"number": "04", "title": "VOID PARADE", "description": "Deep, dark, driving.", "order": 4,
-     "listen_url": ""},
-    {"number": "05", "title": "AMBER CITY", "description": "Warm tones for cold nights.", "order": 5,
-     "listen_url": ""},
-    {"number": "06", "title": "NEBULA", "description": "Cosmic house selections.", "order": 6,
-     "listen_url": ""},
-    {"number": "07", "title": "SIGNAL", "description": "Broadcasting from underground.", "order": 7,
-     "listen_url": ""},
-    {"number": "08", "title": "EQUINOX", "description": "The turning point set.", "order": 8,
-     "listen_url": ""},
-    {"number": "09", "title": "APEX", "description": "The current chapter. Peak time.", "order": 9,
-     "listen_url": ""},
+    {"number": "01", "title": "GOOD MOOD",          "year": "2017", "plays": "",       "description": "The origin. Where Good Mood begins.",         "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 0, "order": 1},
+    {"number": "02", "title": "GOOD MOOD VOL. 2",   "year": "2018", "plays": "16.7K",  "description": "#GM2 — @DjSayd.",                              "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 1, "order": 2},
+    {"number": "03", "title": "NWARLAND PARTY",     "year": "2018", "plays": "40.2K",  "description": "Good Mood Vol. 3 — Nwarland Party.",          "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 2, "order": 3},
+    {"number": "04", "title": "REMEMBER",           "year": "2020", "plays": "7 157",  "description": "Good Mood Vol. 4 — Remember.",                "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 3, "order": 4},
+    {"number": "05", "title": "NWARLAND PT.2",      "year": "2020", "plays": "73.6K",  "description": "Good Mood Vol. 5 — Nwarland Pt. 2.",          "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 4, "order": 5},
+    {"number": "06", "title": "VIE DE CÉSAR",       "year": "2021", "plays": "200K",   "description": "Good Mood Vol. 6 — Vie de César.",            "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 5, "order": 6},
+    {"number": "07", "title": "GOOD MOOD VOL. 7",   "year": "2022", "plays": "102K",   "description": "Good Mood Vol. 7.",                           "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 6, "order": 7},
+    {"number": "08", "title": "LIVE BIRTHDAY",      "year": "2022", "plays": "530K",   "description": "Good Mood Vol. 8 — feat. DJ VYBZ. Live Birthday.", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 7, "order": 8},
+    {"number": "09", "title": "SUMMER BABY",        "year": "2022", "plays": "83K",    "description": "Good Mood Vol. 9 — Summer Baby.",             "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 8, "order": 9},
 ]
 
 DEFAULT_TOUR = [
@@ -300,13 +294,21 @@ async def startup():
             await db.catalogue.insert_one(doc)
         logging.info("Seeded 9 catalogue volumes")
     else:
-        # Backfill: for volumes matching seed numbers with empty listen_url, set the demo URL
+        # Migrate: force-refresh real catalogue metadata (title/year/plays/listen_url/sc_track/description)
+        # This overwrites any prior demo data with real DJ Sayd catalogue.
         for v in DEFAULT_VOLUMES:
-            if v.get("listen_url"):
-                await db.catalogue.update_one(
-                    {"number": v["number"], "$or": [{"listen_url": ""}, {"listen_url": {"$exists": False}}]},
-                    {"$set": {"listen_url": v["listen_url"]}}
-                )
+            await db.catalogue.update_one(
+                {"number": v["number"]},
+                {"$set": {
+                    "title": v["title"],
+                    "year": v.get("year", ""),
+                    "plays": v.get("plays", ""),
+                    "description": v.get("description", ""),
+                    "listen_url": v.get("listen_url", ""),
+                    "sc_track": v.get("sc_track"),
+                    "order": v["order"],
+                }}
+            )
 
     # Seed tour dates (only if empty)
     if await db.tour.count_documents({}) == 0:

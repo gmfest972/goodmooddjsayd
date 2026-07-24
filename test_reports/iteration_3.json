@@ -1,0 +1,33 @@
+{
+  "summary": "Iteration 3 full-stack test PASSED. Backend: 17/17 pytest passed. GET /api/catalogue returns 9 volumes with real DJ Sayd metadata — titles, years (2017-2022), sc_track (0-8), listen_url = shared SC playlist for all. Vol 08 plays='530K' verified. Admin CRUD accepts year/plays/sc_track (create + update + persistence verified). Frontend: Landing renders 9 catalogue cards each with title, year (top-right), plays badge, and ÉCOUTER <button>. Clicking Vol 08 ÉCOUTER opens sc-player-modal with iframe src containing url=<playlist> and start_track=7; Vol 01 -> start_track=0 confirmed. Modal header shows VOL. 08 — LIVE BIRTHDAY. Close button dismisses modal. TopNav /logo-gm.png loads (HTTP 200) with CSS filter 'invert(1) brightness(1.1)'. Footer has all 4 social links (social-ig-goodmood, social-ig-sayd, social-vevo, social-soundcloud) with correct hrefs. Newsletter POST works. Admin login redirects to /admin dashboard which lists all 9 real titles.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin catalogue dashboard", "issues": ["Admin table only shows columns Number/Title/Order — new fields (Year, Plays, sc_track) are accepted by backend PUT but not exposed as columns or edit fields in the admin UI. Admin cannot edit year/plays through the dashboard, only via direct API call. Recommend adding these fields to the admin edit form."]},
+      {"screen": "SoundCloud iframe", "issues": ["Console warning: 'Encrypted Media access blocked by Feature Policy'. Cosmetic — audio playback still works because tracks aren't DRM-protected. Consider allow=\"autoplay; encrypted-media\" on iframe if playback issues arise."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_catalogue_real_data.py",
+    "/app/backend/tests/test_soundcloud_integration.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Expose year/plays/sc_track fields in admin edit form (currently only backend supports them)."
+  ],
+  "critical_code_review_comments": [
+    "server.py startup migration force-updates title/year/plays/listen_url/sc_track/description on every startup based on `number` — safe and idempotent for real catalogue but will silently overwrite any admin edits to those fields on next backend restart. Consider gating the migration behind a one-shot flag/env var.",
+    "Previous iter 2 test file (test_soundcloud_integration.py) is now stale — it asserts Vol 01 listen_url='forss/flickermood' which no longer matches. Left in place per policy (not removing tests written by prior agents), but should be removed or updated by main agent. Iter 3 tests are in test_catalogue_real_data.py.",
+    "SoundCloudPlayer.jsx iframe should include allow=\"autoplay; encrypted-media\" to silence Permissions Policy warnings.",
+    "Frontend Landing.jsx has no i18n content for the new social/CVLN footer — hardcoded English/French strings; consider moving to translations."
+  ],
+  "updated_files": ["/app/backend/tests/test_catalogue_real_data.py (new)"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@goodmood.com / GoodMood2026",
+  "seed_data_creation": "None — used seeded catalogue force-migrated by startup event.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 3 tests at /app/backend/tests/test_catalogue_real_data.py (17 tests, all pass). Note test_soundcloud_integration.py from iter 2 is now stale (asserts old listen_url values) and should be deleted by main agent. Startup migration force-updates existing catalogue docs on every boot, so any admin edits to title/year/plays/listen_url/sc_track will be reverted on next restart — flag this if admin edits become a use case."
+}

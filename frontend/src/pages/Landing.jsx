@@ -73,12 +73,45 @@ export default function Landing() {
         <Newsletter />
       </main>
 
-      <footer className="border-t border-white/5 py-10 px-8 md:px-12 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-[#FF5A1F]" />
-          <span className="font-display text-xl tracking-widest">GOOD MOOD</span>
+      <footer className="border-t border-white/5 py-12 px-8 md:px-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
+          <div className="flex items-center gap-3">
+            <img src="/logo-gm.png" alt="Good Mood" className="h-12 w-12 object-contain" style={{ filter: "invert(1) brightness(1.1)" }} />
+            <div>
+              <div className="font-display text-2xl tracking-widest leading-none">GOOD MOOD</div>
+              <div className="font-mono text-[10px] tracking-[0.3em] text-white/40 mt-1">DJ SAYD — LIVE & RECORDS</div>
+            </div>
+          </div>
+
+          <div>
+            <p className="font-mono text-[10px] tracking-[0.3em] text-[#FF5A1F] mb-4">— FOLLOW</p>
+            <div className="flex flex-col gap-2 font-mono text-xs tracking-widest text-white/60">
+              <a href="https://www.instagram.com/goodmood.fest" target="_blank" rel="noreferrer" className="hover:text-[#FF5A1F] transition-colors" data-testid="social-ig-goodmood">
+                INSTAGRAM · @GOODMOOD.FEST →
+              </a>
+              <a href="https://www.instagram.com/sayd_artist" target="_blank" rel="noreferrer" className="hover:text-[#FF5A1F] transition-colors" data-testid="social-ig-sayd">
+                INSTAGRAM · @SAYD_ARTIST →
+              </a>
+              <a href="https://youtube.com/@djsaydvevo8145" target="_blank" rel="noreferrer" className="hover:text-[#FF5A1F] transition-colors" data-testid="social-vevo">
+                YOUTUBE · DJ SAYD VEVO →
+              </a>
+              <a href="https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd" target="_blank" rel="noreferrer" className="hover:text-[#FF5A1F] transition-colors" data-testid="social-soundcloud">
+                SOUNDCLOUD · FULL SERIES →
+              </a>
+            </div>
+          </div>
+
+          <div className="md:text-right">
+            <p className="font-mono text-[10px] tracking-[0.3em] text-[#FF5A1F] mb-4">— CVLN GROUPE</p>
+            <p className="font-mono text-[10px] tracking-[0.25em] text-white/40 leading-relaxed">
+              GOOD MOOD IS PART OF CVLN GROUPE HOLDING · PÔLE EVENTS · PARIS · CARAÏBES · WORLD
+            </p>
+          </div>
         </div>
-        <p className="font-mono text-[10px] tracking-[0.25em] text-white/40">{t("footer.rights")}</p>
+        <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/5 flex justify-between items-center">
+          <p className="font-mono text-[10px] tracking-[0.25em] text-white/40">{t("footer.rights")}</p>
+          <p className="font-mono text-[10px] tracking-[0.25em] text-white/30">DESIGNED IN THE DARK · BUILT ON EMERGENT</p>
+        </div>
       </footer>
     </div>
   );

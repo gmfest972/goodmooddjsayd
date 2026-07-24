@@ -17,7 +17,7 @@ function loadSoundCloudApi() {
   return scriptPromise;
 }
 
-function buildEmbedUrl(trackUrl) {
+function buildEmbedUrl(trackUrl, startTrack) {
   const params = new URLSearchParams({
     url: trackUrl,
     color: "#ff5a1f",
@@ -29,10 +29,13 @@ function buildEmbedUrl(trackUrl) {
     show_teaser: "false",
     visual: "true",
   });
+  if (startTrack !== null && startTrack !== undefined && startTrack !== "") {
+    params.set("start_track", String(startTrack));
+  }
   return `https://w.soundcloud.com/player/?${params.toString()}`;
 }
 
-export default function SoundCloudPlayer({ open, onClose, trackUrl, title, volumeNumber }) {
+export default function SoundCloudPlayer({ open, onClose, trackUrl, startTrack, title, volumeNumber }) {
   const iframeRef = useRef(null);
   const widgetRef = useRef(null);
   const [ready, setReady] = useState(false);
@@ -160,7 +163,7 @@ export default function SoundCloudPlayer({ open, onClose, trackUrl, title, volum
             scrolling="no"
             frameBorder="no"
             allow="autoplay"
-            src={buildEmbedUrl(trackUrl)}
+            src={buildEmbedUrl(trackUrl, startTrack)}
             className="block"
             data-testid="sc-player-iframe"
           />
