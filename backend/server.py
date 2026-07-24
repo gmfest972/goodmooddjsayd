@@ -242,15 +242,24 @@ async def admin_newsletter_export(_=Depends(get_current_admin)):
 
 # ---------- Startup ----------
 DEFAULT_VOLUMES = [
-    {"number": "01", "title": "GENESIS", "description": "The origin. Where Good Mood begins.", "order": 1},
-    {"number": "02", "title": "NOCTURNE", "description": "After midnight sessions from Paris.", "order": 2},
-    {"number": "03", "title": "TROPIC HEAT", "description": "Kompa meets club. Caraïbes energy.", "order": 3},
-    {"number": "04", "title": "VOID PARADE", "description": "Deep, dark, driving.", "order": 4},
-    {"number": "05", "title": "AMBER CITY", "description": "Warm tones for cold nights.", "order": 5},
-    {"number": "06", "title": "NEBULA", "description": "Cosmic house selections.", "order": 6},
-    {"number": "07", "title": "SIGNAL", "description": "Broadcasting from underground.", "order": 7},
-    {"number": "08", "title": "EQUINOX", "description": "The turning point set.", "order": 8},
-    {"number": "09", "title": "APEX", "description": "The current chapter. Peak time.", "order": 9},
+    {"number": "01", "title": "GENESIS", "description": "The origin. Where Good Mood begins.", "order": 1,
+     "listen_url": "https://soundcloud.com/forss/flickermood"},
+    {"number": "02", "title": "NOCTURNE", "description": "After midnight sessions from Paris.", "order": 2,
+     "listen_url": "https://soundcloud.com/forss/journeyman"},
+    {"number": "03", "title": "TROPIC HEAT", "description": "Kompa meets club. Caraïbes energy.", "order": 3,
+     "listen_url": ""},
+    {"number": "04", "title": "VOID PARADE", "description": "Deep, dark, driving.", "order": 4,
+     "listen_url": ""},
+    {"number": "05", "title": "AMBER CITY", "description": "Warm tones for cold nights.", "order": 5,
+     "listen_url": ""},
+    {"number": "06", "title": "NEBULA", "description": "Cosmic house selections.", "order": 6,
+     "listen_url": ""},
+    {"number": "07", "title": "SIGNAL", "description": "Broadcasting from underground.", "order": 7,
+     "listen_url": ""},
+    {"number": "08", "title": "EQUINOX", "description": "The turning point set.", "order": 8,
+     "listen_url": ""},
+    {"number": "09", "title": "APEX", "description": "The current chapter. Peak time.", "order": 9,
+     "listen_url": ""},
 ]
 
 DEFAULT_TOUR = [
@@ -290,6 +299,14 @@ async def startup():
             doc = Volume(**v).model_dump()
             await db.catalogue.insert_one(doc)
         logging.info("Seeded 9 catalogue volumes")
+    else:
+        # Backfill: for volumes matching seed numbers with empty listen_url, set the demo URL
+        for v in DEFAULT_VOLUMES:
+            if v.get("listen_url"):
+                await db.catalogue.update_one(
+                    {"number": v["number"], "$or": [{"listen_url": ""}, {"listen_url": {"$exists": False}}]},
+                    {"$set": {"listen_url": v["listen_url"]}}
+                )
 
     # Seed tour dates (only if empty)
     if await db.tour.count_documents({}) == 0:

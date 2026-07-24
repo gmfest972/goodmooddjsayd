@@ -31,7 +31,8 @@ function VolumeForm({ initial, onSave, onCancel, t }) {
       <input required placeholder="Title" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-title-input" />
       <textarea placeholder="Description" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm min-h-20" data-testid="volume-desc-input" />
       <input placeholder="Cover URL" value={f.cover_url} onChange={(e) => setF({ ...f, cover_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-cover-input" />
-      <input placeholder="Listen URL (Spotify/SoundCloud)" value={f.listen_url} onChange={(e) => setF({ ...f, listen_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-listen-input" />
+      <input placeholder="SoundCloud URL (https://soundcloud.com/...)" value={f.listen_url} onChange={(e) => setF({ ...f, listen_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-listen-input" />
+      <p className="text-[10px] font-mono tracking-widest text-white/40 -mt-1">Paste a SoundCloud track URL — the widget will play inline on the site.</p>
       <div className="flex gap-3 pt-2">
         <button type="submit" className="btn-primary flex-1" data-testid="volume-save-btn">{t("admin.save")}</button>
         <button type="button" onClick={onCancel} className="btn-ghost flex-1">{t("admin.cancel")}</button>

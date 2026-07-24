@@ -2,10 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import api from "@/api";
 import { Play, ExternalLink } from "lucide-react";
+import SoundCloudPlayer from "@/components/SoundCloudPlayer";
+
+const isSoundCloud = (url) => typeof url === "string" && /soundcloud\.com/i.test(url);
 
 export default function Catalogue() {
   const { t } = useTranslation();
   const [items, setItems] = useState([]);
+  const [playing, setPlaying] = useState(null); // volume object
 
   useEffect(() => {
     api.get("/catalogue").then((r) => setItems(r.data)).catch(() => {});
@@ -57,15 +61,25 @@ export default function Catalogue() {
               <h3 className="font-display text-2xl mb-1 leading-none">{v.title}</h3>
               <p className="text-xs text-white/50 mb-4 line-clamp-2 min-h-[2.5rem]">{v.description}</p>
               {v.listen_url ? (
-                <a
-                  href={v.listen_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-[#FF5A1F] hover:text-white transition-colors"
-                  data-testid={`catalogue-listen-${v.number}`}
-                >
-                  <Play size={12} /> {t("catalogue.listen")}
-                </a>
+                isSoundCloud(v.listen_url) ? (
+                  <button
+                    onClick={() => setPlaying(v)}
+                    className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-[#FF5A1F] hover:text-white transition-colors"
+                    data-testid={`catalogue-listen-${v.number}`}
+                  >
+                    <Play size={12} /> {t("catalogue.listen")}
+                  </button>
+                ) : (
+                  <a
+                    href={v.listen_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-[#FF5A1F] hover:text-white transition-colors"
+                    data-testid={`catalogue-listen-${v.number}`}
+                  >
+                    <Play size={12} /> {t("catalogue.listen")}
+                  </a>
+                )
               ) : (
                 <span className="inline-flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-white/30">
                   <ExternalLink size={12} /> —
@@ -75,6 +89,14 @@ export default function Catalogue() {
           </article>
         ))}
       </div>
+
+      <SoundCloudPlayer
+        open={!!playing}
+        onClose={() => setPlaying(null)}
+        trackUrl={playing?.listen_url}
+        title={playing?.title || ""}
+        volumeNumber={playing?.number || ""}
+      />
     </section>
   );
 }

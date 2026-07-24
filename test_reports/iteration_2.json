@@ -1,0 +1,27 @@
+{
+  "summary": "SoundCloud Widget integration tested end-to-end. Backend: /api/catalogue returns Vol 01 with listen_url='https://soundcloud.com/forss/flickermood', Vol 02 with 'https://soundcloud.com/forss/journeyman', Vol 03-09 empty. Frontend: ÉCOUTER buttons render as <button> for SC URLs (Vol 01/02) and placeholders show '—' for the rest. Clicking ÉCOUTER opens sc-player-modal, iframe src contains 'w.soundcloud.com/player' with correct params (color=%23ff5a1f, auto_play=true, visual=true, hide_related=true) and 380px height. Modal header shows correct Vol number and title. Close button dismisses modal. External link points to original SoundCloud track URL. Existing flows (tour count, newsletter POST, admin login) unbroken. 9/9 pytest passed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "SoundCloud modal", "issues": ["Backdrop click-to-close does not consistently dismiss the modal once the SoundCloud iframe has focus (SC widget seems to swallow parent click). X close button works fine — spec-compliant. Consider adding Escape-key close for accessibility."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_soundcloud_integration.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SoundCloudPlayer.jsx: no Escape-key handler; only backdrop + X close. Low priority.",
+    "SoundCloudPlayer.jsx: iframe rendered with src on every render regardless of `open`; but component early-returns null before iframe if !open, so this is fine.",
+    "server.py backfill only sets listen_url when currently empty — safe and idempotent. Good.",
+    "Volumes returned via response_model=List[Volume] may fail validation for legacy docs missing listen_url field; currently OK because model gives default ''.",
+    "SC widget iframe requests encrypted-media permission which is blocked by Emergent preview iframe policy (console warnings). Not a blocker — playback likely still works because tracks aren't DRM-protected; consider adding `allow=\"autoplay; encrypted-media\"` on iframe (already only has autoplay) — negligible."
+  ],
+  "updated_files": ["/app/backend/tests/test_soundcloud_integration.py (new)"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@goodmood.com / GoodMood2026 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "None (used existing seeded catalogue)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend tests live at /app/backend/tests/test_soundcloud_integration.py (9 tests, all passing). SoundCloud integration verified working end-to-end. Only cosmetic note: backdrop click doesn't always close modal once SC iframe has focus; X button works. All spec requirements met."
+}
