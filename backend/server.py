@@ -14,6 +14,7 @@ import io
 import csv
 import bcrypt
 import jwt
+import stripe
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from typing import List, Optional
@@ -29,6 +30,10 @@ api_router = APIRouter(prefix="/api")
 
 JWT_ALGO = "HS256"
 JWT_SECRET = os.environ['JWT_SECRET']
+
+# Stripe
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY") or "sk_test_emergent"
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 
 
 # ---------- Utilities ----------
@@ -243,6 +248,229 @@ async def admin_newsletter_export(_=Depends(get_current_admin)):
     )
 
 
+# ---------- Merch / Products ----------
+class ProductIn(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    name: str
+    description: Optional[str] = ""
+    image_url: Optional[str] = ""
+    price_cents: int  # EUR cents
+    currency: str = "eur"
+    sizes: List[str] = Field(default_factory=lambda: ["S", "M", "L", "XL"])
+    active: bool = True
+    order: int = 0
+
+class Product(ProductIn):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    lookup_key: str = ""
+    stripe_product_id: Optional[str] = ""
+    stripe_price_id: Optional[str] = ""
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+def _sync_product_to_stripe(doc: dict) -> dict:
+    """Create or update the Stripe product + price for a merch item.
+    Idempotent by lookup_key. Deactivates the old price if amount/currency changed.
+    """
+    lookup_key = doc.get("lookup_key") or f"gm_{doc['id'][:8]}"
+    doc["lookup_key"] = lookup_key
+
+    # Product
+    stripe_product_id = doc.get("stripe_product_id")
+    product_kwargs = {
+        "name": doc["name"],
+        "description": doc.get("description") or None,
+        "images": [doc["image_url"]] if doc.get("image_url") else None,
+        "active": bool(doc.get("active", True)),
+        "metadata": {"managed_by": "goodmood", "product_uuid": doc["id"]},
+    }
+    product_kwargs = {k: v for k, v in product_kwargs.items() if v is not None}
+    if stripe_product_id:
+        sp = stripe.Product.modify(stripe_product_id, **product_kwargs)
+    else:
+        sp = stripe.Product.create(**product_kwargs)
+        doc["stripe_product_id"] = sp.id
+
+    # Price — find by lookup_key, deactivate if amount/currency changed
+    existing = stripe.Price.list(lookup_keys=[lookup_key], active=True, limit=1).data
+    price_cents = int(doc["price_cents"])
+    currency = doc.get("currency", "eur").lower()
+    if existing and (existing[0].unit_amount != price_cents or existing[0].currency != currency):
+        stripe.Price.modify(existing[0].id, active=False)
+        existing = []
+    if existing:
+        doc["stripe_price_id"] = existing[0].id
+    else:
+        p = stripe.Price.create(
+            product=sp.id,
+            unit_amount=price_cents,
+            currency=currency,
+            lookup_key=lookup_key,
+            transfer_lookup_key=True,
+        )
+        doc["stripe_price_id"] = p.id
+    return doc
+
+
+@api_router.get("/merch", response_model=List[Product])
+async def public_merch():
+    items = await db.products.find({"active": True}, {"_id": 0}).sort("order", 1).to_list(200)
+    return items
+
+
+@api_router.get("/admin/merch", response_model=List[Product])
+async def admin_merch_list(_=Depends(get_current_admin)):
+    items = await db.products.find({}, {"_id": 0}).sort("order", 1).to_list(500)
+    return items
+
+
+@api_router.post("/admin/merch", response_model=Product)
+async def admin_merch_create(p: ProductIn, _=Depends(get_current_admin)):
+    doc = Product(**p.model_dump()).model_dump()
+    try:
+        doc = _sync_product_to_stripe(doc)
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=502, detail=f"Stripe sync failed: {e.user_message or str(e)}")
+    await db.products.insert_one(doc)
+    return doc
+
+
+@api_router.put("/admin/merch/{pid}", response_model=Product)
+async def admin_merch_update(pid: str, p: ProductIn, _=Depends(get_current_admin)):
+    existing = await db.products.find_one({"id": pid}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Not found")
+    existing.update(p.model_dump())
+    try:
+        existing = _sync_product_to_stripe(existing)
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=502, detail=f"Stripe sync failed: {e.user_message or str(e)}")
+    await db.products.update_one({"id": pid}, {"$set": existing})
+    return existing
+
+
+@api_router.delete("/admin/merch/{pid}")
+async def admin_merch_delete(pid: str, _=Depends(get_current_admin)):
+    existing = await db.products.find_one({"id": pid}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Not found")
+    # Deactivate in Stripe (don't delete — historical orders reference it)
+    try:
+        if existing.get("stripe_product_id"):
+            stripe.Product.modify(existing["stripe_product_id"], active=False)
+    except stripe.error.StripeError:
+        pass
+    await db.products.delete_one({"id": pid})
+    return {"ok": True}
+
+
+# ---------- Payments / Checkout ----------
+class CheckoutRequest(BaseModel):
+    lookup_key: str
+    quantity: int = Field(1, ge=1, le=10)
+    size: Optional[str] = ""
+    origin_url: str
+
+
+@api_router.post("/payments/checkout")
+async def create_checkout(req: CheckoutRequest):
+    prices = stripe.Price.list(lookup_keys=[req.lookup_key], active=True, limit=1).data
+    if not prices:
+        raise HTTPException(status_code=404, detail=f"Price not found: {req.lookup_key}")
+    price = prices[0]
+    session = stripe.checkout.Session.create(
+        line_items=[{"price": price.id, "quantity": req.quantity}],
+        mode="payment",
+        success_url=f"{req.origin_url}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{req.origin_url}/payment/cancel",
+        shipping_address_collection={"allowed_countries": [
+            "FR", "US", "GB", "DE", "ES", "IT", "BE", "NL", "CH", "PT", "CA",
+            "MQ", "GP", "GF", "RE", "YT", "PM", "BL", "MF", "PF", "NC"
+        ]},
+        metadata={"lookup_key": req.lookup_key, "size": req.size or ""},
+    )
+    await db.payment_transactions.insert_one({
+        "session_id": session.id,
+        "lookup_key": req.lookup_key,
+        "size": req.size or "",
+        "quantity": req.quantity,
+        "amount_cents": (price.unit_amount or 0) * req.quantity,
+        "currency": price.currency,
+        "status": "initiated",
+        "payment_status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"checkout_url": session.url, "session_id": session.id}
+
+
+@api_router.get("/payments/status/{session_id}")
+async def get_payment_status(session_id: str):
+    record = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    # Webhook fallback — Stripe direct check while still pending
+    if record.get("payment_status") != "paid":
+        try:
+            s = stripe.checkout.Session.retrieve(session_id)
+            if s.payment_status == "paid" or s.status == "complete":
+                await db.payment_transactions.update_one(
+                    {"session_id": session_id, "payment_status": {"$ne": "paid"}},
+                    {"$set": {
+                        "status": "completed",
+                        "payment_status": "paid",
+                        "stripe_payment_intent_id": s.payment_intent,
+                        "customer_email": (s.customer_details or {}).get("email") if s.customer_details else None,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }}
+                )
+                record = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+        except stripe.error.StripeError:
+            pass
+    return {
+        "session_id": record["session_id"],
+        "status": record["status"],
+        "payment_status": record["payment_status"],
+        "amount_cents": record.get("amount_cents"),
+        "currency": record.get("currency"),
+    }
+
+
+@api_router.post("/stripe/webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig = request.headers.get("stripe-signature", "")
+    try:
+        event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    obj, t = event["data"]["object"], event["type"]
+    if t == "checkout.session.completed":
+        await db.payment_transactions.update_one(
+            {"session_id": obj["id"], "payment_status": {"$ne": "paid"}},
+            {"$set": {
+                "status": "completed",
+                "payment_status": obj.get("payment_status", "paid"),
+                "stripe_payment_intent_id": obj.get("payment_intent"),
+                "customer_email": (obj.get("customer_details") or {}).get("email"),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }}
+        )
+    elif t == "checkout.session.async_payment_failed":
+        await db.payment_transactions.update_one(
+            {"session_id": obj["id"]},
+            {"$set": {"status": "failed", "payment_status": "failed",
+                      "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    return {"status": "ok"}
+
+
+@api_router.get("/admin/orders")
+async def admin_orders(_=Depends(get_current_admin)):
+    items = await db.payment_transactions.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return {"count": len(items), "items": items}
+
+
 # ---------- Startup ----------
 DEFAULT_VOLUMES = [
     {"number": "01", "title": "GOOD MOOD",          "year": "2017", "plays": "",       "description": "The origin. Where Good Mood begins.",              "cover_url": "https://i1.sndcdn.com/artworks-000225635084-6zerwt-t500x500.jpg", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/good-mood-dj-sayd-gm-2017",                              "sc_track": None, "order": 1},
@@ -332,9 +560,29 @@ async def startup():
             await db.tour.insert_one(doc)
         logging.info("Seeded default tour dates")
 
+    # Seed merch (only if empty) — first Good Mood tee
+    if await db.products.count_documents({}) == 0:
+        first = Product(
+            name="Good Mood Tee — Vol.1",
+            description="Heavyweight 240gsm cotton tee. Screen-printed Good Mood emblem on chest, tour cities on back. Unisex fit.",
+            image_url="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&auto=format&fit=crop",
+            price_cents=3500,
+            currency="eur",
+            sizes=["S", "M", "L", "XL"],
+            active=True,
+            order=1,
+        ).model_dump()
+        try:
+            first = _sync_product_to_stripe(first)
+            await db.products.insert_one(first)
+            logging.info("Seeded first Good Mood tee (Stripe synced)")
+        except Exception as e:
+            logging.warning("Merch seed Stripe sync failed: %s", e)
+
     # Indexes
     await db.newsletter.create_index("email", unique=True)
     await db.users.create_index("email", unique=True)
+    await db.payment_transactions.create_index("session_id", unique=True)
 
 
 app.include_router(api_router)

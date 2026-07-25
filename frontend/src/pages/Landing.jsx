@@ -4,6 +4,7 @@ import Hero3DCanvas from "@/components/Hero3DCanvas";
 import TopNav from "@/components/TopNav";
 import Catalogue from "@/components/Catalogue";
 import Tour from "@/components/Tour";
+import Merch from "@/components/Merch";
 import Newsletter from "@/components/Newsletter";
 import { ArrowRight } from "lucide-react";
 
@@ -69,6 +70,8 @@ export default function Landing() {
         <Catalogue />
         <div className="divider-orange opacity-40" />
         <Tour />
+        <div className="divider-orange opacity-40" />
+        <Merch />
         <div className="divider-orange opacity-40" />
         <Newsletter />
       </main>

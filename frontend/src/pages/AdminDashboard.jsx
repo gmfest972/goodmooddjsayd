@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api, { API } from "@/api";
 import { toast } from "sonner";
-import { LogOut, Plus, Pencil, Trash2, Download, Music, Calendar, Mail } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, Download, Music, Calendar, Mail, ShoppingBag, Receipt } from "lucide-react";
 
 const EMPTY_VOLUME = { number: "", title: "", year: "", plays: "", description: "", cover_url: "", listen_url: "", sc_track: null, order: 0 };
 const EMPTY_TOUR = { city: "", venue: "", country: "", date: "", ticket_url: "", status: "available" };
+const EMPTY_PRODUCT = { name: "", description: "", image_url: "", price_cents: 3500, currency: "eur", sizes: ["S", "M", "L", "XL"], active: true, order: 0 };
 
 function Modal({ open, onClose, title, children }) {
   if (!open) return null;
@@ -69,6 +70,51 @@ function TourForm({ initial, onSave, onCancel, t }) {
   );
 }
 
+function ProductForm({ initial, onSave, onCancel, t }) {
+  const [f, setF] = useState(initial || EMPTY_PRODUCT);
+  const sizesStr = (f.sizes || []).join(", ");
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSave(f); }} className="space-y-3" data-testid="product-form">
+      <input required placeholder="Product name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="product-name-input" />
+      <textarea placeholder="Description" value={f.description || ""} onChange={(e) => setF({ ...f, description: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm min-h-20" data-testid="product-desc-input" />
+      <input placeholder="Image URL" value={f.image_url || ""} onChange={(e) => setF({ ...f, image_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="product-image-input" />
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Price (cents)</label>
+          <input required type="number" min="100" value={f.price_cents} onChange={(e) => setF({ ...f, price_cents: parseInt(e.target.value) || 0 })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="product-price-input" />
+        </div>
+        <div>
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Currency</label>
+          <select value={f.currency} onChange={(e) => setF({ ...f, currency: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="product-currency-input">
+            <option value="eur">EUR</option>
+            <option value="usd">USD</option>
+            <option value="gbp">GBP</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Order</label>
+          <input type="number" value={f.order} onChange={(e) => setF({ ...f, order: parseInt(e.target.value) || 0 })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="product-order-input" />
+        </div>
+      </div>
+      <div>
+        <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Sizes (comma separated)</label>
+        <input value={sizesStr} onChange={(e) => setF({ ...f, sizes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="product-sizes-input" />
+      </div>
+      <label className="flex items-center gap-2 text-sm text-white/70">
+        <input type="checkbox" checked={!!f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} data-testid="product-active-input" />
+        Active (visible on public store)
+      </label>
+      <p className="text-[10px] font-mono tracking-widest text-white/40">
+        On save, product + price are synced to Stripe automatically.
+      </p>
+      <div className="flex gap-3 pt-2">
+        <button type="submit" className="btn-primary flex-1" data-testid="product-save-btn">{t("admin.save")}</button>
+        <button type="button" onClick={onCancel} className="btn-ghost flex-1">{t("admin.cancel")}</button>
+      </div>
+    </form>
+  );
+}
+
 export default function AdminDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -76,18 +122,24 @@ export default function AdminDashboard() {
   const [volumes, setVolumes] = useState([]);
   const [tour, setTour] = useState([]);
   const [subs, setSubs] = useState({ count: 0, items: [] });
-  const [modal, setModal] = useState(null); // { type: 'volume'|'tour', data }
+  const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState({ count: 0, items: [] });
+  const [modal, setModal] = useState(null);
 
   const load = useCallback(async () => {
     try {
-      const [v, t2, n] = await Promise.all([
+      const [v, t2, n, m, o] = await Promise.all([
         api.get("/admin/catalogue"),
         api.get("/admin/tour"),
         api.get("/admin/newsletter"),
+        api.get("/admin/merch"),
+        api.get("/admin/orders"),
       ]);
       setVolumes(v.data);
       setTour(t2.data);
       setSubs(n.data);
+      setProducts(m.data);
+      setOrders(o.data);
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem("gm_token");
@@ -142,6 +194,22 @@ export default function AdminDashboard() {
     load();
   };
 
+  const saveProduct = async (data) => {
+    try {
+      if (data.id) await api.put(`/admin/merch/${data.id}`, data);
+      else await api.post("/admin/merch", data);
+      toast.success("Saved & synced to Stripe");
+      setModal(null);
+      load();
+    } catch (err) { toast.error(err.response?.data?.detail || "Save failed"); }
+  };
+  const deleteProduct = async (id) => {
+    if (!window.confirm(t("admin.confirm"))) return;
+    await api.delete(`/admin/merch/${id}`);
+    toast.success("Deleted");
+    load();
+  };
+
   const exportCSV = async () => {
     const token = localStorage.getItem("gm_token");
     const res = await fetch(`${API}/admin/newsletter/export`, { headers: { Authorization: `Bearer ${token}` } });
@@ -155,6 +223,8 @@ export default function AdminDashboard() {
   const TABS = [
     { key: "catalogue", label: t("admin.catalogue"), icon: Music },
     { key: "tour", label: t("admin.tour"), icon: Calendar },
+    { key: "merch", label: "Store", icon: ShoppingBag },
+    { key: "orders", label: "Orders", icon: Receipt },
     { key: "newsletter", label: t("admin.newsletter"), icon: Mail },
   ];
 
@@ -219,7 +289,16 @@ export default function AdminDashboard() {
                   {volumes.map((v) => (
                     <tr key={v.id} className="border-t border-white/5" data-testid={`admin-volume-row-${v.number}`}>
                       <td className="px-4 py-3 font-mono text-[#FF5A1F]">{v.number}</td>
-                      <td className="px-4 py-3">{v.title}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          {v.cover_url ? (
+                            <img src={v.cover_url} alt="" className="w-10 h-10 rounded object-cover border border-white/10" />
+                          ) : (
+                            <div className="w-10 h-10 rounded bg-white/5 border border-white/10 flex items-center justify-center font-mono text-[9px] text-white/30">—</div>
+                          )}
+                          <span>{v.title}</span>
+                        </div>
+                      </td>
                       <td className="px-4 py-3 hidden md:table-cell text-white/50 font-mono text-xs">{v.year || "—"}</td>
                       <td className="px-4 py-3 hidden md:table-cell text-white/50 font-mono text-xs">{v.plays || "—"}</td>
                       <td className="px-4 py-3 text-right space-x-2">
@@ -274,6 +353,111 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {tab === "merch" && (
+          <div data-testid="admin-merch-tab">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="font-display text-4xl">Store</h1>
+              <button className="btn-primary flex items-center gap-2" onClick={() => setModal({ type: "product", data: EMPTY_PRODUCT })} data-testid="add-product-btn">
+                <Plus size={16} /> {t("admin.add")}
+              </button>
+            </div>
+            <div className="glass rounded-2xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-black/40 text-xs font-mono tracking-[0.2em] text-white/50">
+                  <tr>
+                    <th className="text-left px-4 py-3">PRODUCT</th>
+                    <th className="text-left px-4 py-3 hidden md:table-cell">PRICE</th>
+                    <th className="text-left px-4 py-3 hidden md:table-cell">SIZES</th>
+                    <th className="text-left px-4 py-3">STATUS</th>
+                    <th className="text-right px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.length === 0 && (
+                    <tr><td colSpan="5" className="px-4 py-8 text-center text-white/30 font-mono text-xs">NO PRODUCTS — CLICK ADD</td></tr>
+                  )}
+                  {products.map((p) => (
+                    <tr key={p.id} className="border-t border-white/5" data-testid={`admin-product-row-${p.id}`}>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt="" className="w-10 h-10 rounded object-cover border border-white/10" />
+                          ) : (
+                            <div className="w-10 h-10 rounded bg-white/5 border border-white/10" />
+                          )}
+                          <div>
+                            <div>{p.name}</div>
+                            <div className="text-[10px] font-mono text-white/40">{p.lookup_key}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 hidden md:table-cell font-mono text-[#FF5A1F] text-xs">
+                        {(p.price_cents / 100).toFixed(0)} {p.currency?.toUpperCase()}
+                      </td>
+                      <td className="px-4 py-3 hidden md:table-cell text-white/50 font-mono text-xs">{(p.sizes || []).join(" · ")}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-mono ${p.active ? "text-emerald-400" : "text-white/40"}`}>
+                          {p.active ? "active" : "inactive"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right space-x-2">
+                        <button onClick={() => setModal({ type: "product", data: p })} className="text-white/60 hover:text-[#FF5A1F]" data-testid={`edit-product-${p.id}`}><Pencil size={14} /></button>
+                        <button onClick={() => deleteProduct(p.id)} className="text-white/60 hover:text-[#C81E3A]" data-testid={`delete-product-${p.id}`}><Trash2 size={14} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {tab === "orders" && (
+          <div data-testid="admin-orders-tab">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="font-display text-4xl">Orders</h1>
+                <p className="text-white/50 font-mono text-xs mt-2 tracking-[0.2em]">{orders.count} TRANSACTIONS</p>
+              </div>
+            </div>
+            <div className="glass rounded-2xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-black/40 text-xs font-mono tracking-[0.2em] text-white/50">
+                  <tr>
+                    <th className="text-left px-4 py-3">DATE</th>
+                    <th className="text-left px-4 py-3">PRODUCT</th>
+                    <th className="text-left px-4 py-3 hidden md:table-cell">SIZE / QTY</th>
+                    <th className="text-left px-4 py-3">AMOUNT</th>
+                    <th className="text-left px-4 py-3">STATUS</th>
+                    <th className="text-left px-4 py-3 hidden lg:table-cell">EMAIL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.items.length === 0 && (
+                    <tr><td colSpan="6" className="px-4 py-8 text-center text-white/30 font-mono text-xs">NO ORDERS YET</td></tr>
+                  )}
+                  {orders.items.map((o) => (
+                    <tr key={o.session_id} className="border-t border-white/5">
+                      <td className="px-4 py-3 text-white/50 font-mono text-xs">{o.created_at?.substring(0, 10)}</td>
+                      <td className="px-4 py-3 font-mono text-xs">{o.lookup_key}</td>
+                      <td className="px-4 py-3 hidden md:table-cell text-white/60 font-mono text-xs">{o.size || "—"} · x{o.quantity}</td>
+                      <td className="px-4 py-3 font-mono text-[#FF5A1F] text-xs">
+                        {((o.amount_cents || 0) / 100).toFixed(2)} {o.currency?.toUpperCase()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-mono ${o.payment_status === "paid" ? "text-emerald-400" : o.payment_status === "failed" ? "text-red-400" : "text-white/40"}`}>
+                          {o.payment_status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 hidden lg:table-cell text-white/50 text-xs">{o.customer_email || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {tab === "newsletter" && (
           <div data-testid="admin-newsletter-tab">
             <div className="flex justify-between items-center mb-6">
@@ -317,6 +501,9 @@ export default function AdminDashboard() {
       </Modal>
       <Modal open={modal?.type === "tour"} onClose={() => setModal(null)} title={modal?.data?.id ? t("admin.edit") : t("admin.add")}>
         {modal?.type === "tour" && <TourForm initial={modal.data} onSave={saveTour} onCancel={() => setModal(null)} t={t} />}
+      </Modal>
+      <Modal open={modal?.type === "product"} onClose={() => setModal(null)} title={modal?.data?.id ? t("admin.edit") : t("admin.add")}>
+        {modal?.type === "product" && <ProductForm initial={modal.data} onSave={saveProduct} onCancel={() => setModal(null)} t={t} />}
       </Modal>
     </div>
   );

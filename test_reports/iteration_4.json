@@ -1,0 +1,30 @@
+{
+  "summary": "Tested Merch Drop + Stripe checkout end-to-end. Backend: 8/8 pytest passed (public /api/merch shows seeded 'Good Mood Tee — Vol.1' at 3500 EUR cents with populated stripe_product_id/stripe_price_id/lookup_key 'gm_*'; POST /api/payments/checkout returns valid https://checkout.stripe.com/ URL + cs_ session id; invalid lookup_key -> 404; /api/payments/status/{sid} returns pending payment_status with correct amount_cents=price*qty and currency=eur; /api/admin/merch requires Bearer (401 without); /api/admin/orders includes the created session; full CRUD cycle: create -> appears in public list -> update price triggers new stripe_price_id (old deactivated) -> delete removes from public list). Frontend: nav-merch link scrolls to #merch, merch-section visible, size buttons S/M/L/XL, qty +/- steppers, total updates in € (35€ -> 70€), BUY NOW POSTs and redirects to checkout.stripe.com/... /payment/cancel -> cancel-back-merch returns to /#merch. /payment/success shows 'CONFIRMING PAYMENT' loader then 'STILL PROCESSING' when session unknown. Admin login works; all 5 tabs (Catalogue, Tour, Store, Orders, Newsletter) present; Orders tab renders 3 pending transactions with product lookup_key, size/qty, EUR amounts, pending status. No real Stripe payment completed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin Orders tab", "issues": ["Product column displays raw lookup_key (e.g. 'gm_6cd0e42f') instead of product name — cosmetic; consider joining with products collection for readability"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_merch_payments.py",
+    "/app/test_reports/pytest/merch_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py now ~600 lines — approaching the 700-line split threshold; consider modularizing (routers/merch.py, routers/payments.py) before further growth.",
+    "_sync_product_to_stripe is a sync function called from async endpoints — blocking the event loop on every Stripe API round-trip. Acceptable for admin CRUD but should ideally use stripe async client or asyncio.to_thread.",
+    "Merch seed on startup wraps Stripe sync in bare except Exception — if Stripe is temporarily down at boot the product is silently skipped. Consider retry or explicit log level ERROR.",
+    "AdminDashboard.jsx (~511 lines) and product/volume/tour form components all in one file — split into per-tab modules for maintainability.",
+    "Orders table shows lookup_key instead of product name — join or embed product snapshot in payment_transactions for better UX and historical accuracy."
+  ],
+  "updated_files": ["/app/backend/tests/test_merch_payments.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@goodmood.com / GoodMood2026 (seeded on startup)",
+  "seed_data_creation": "Backend startup seeds 1 product 'Good Mood Tee — Vol.1' (35€) with Stripe sync; 3 test checkout sessions were created during backend tests and are visible in Admin Orders.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Stripe test keys live in /app/backend/.env. Do NOT complete real payments. Backend test file at /app/backend/tests/test_merch_payments.py covers full CRUD + payments status. Multiple pending test sessions persist in db.payment_transactions from prior runs (unique index on session_id keeps them de-duped)."
+}

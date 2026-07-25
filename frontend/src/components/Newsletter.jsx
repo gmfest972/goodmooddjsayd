@@ -30,7 +30,7 @@ export default function Newsletter() {
       <div className="glass rounded-3xl p-10 md:p-14 relative overflow-hidden">
         <div className="grain" />
         <div className="relative z-10">
-          <p className="font-mono text-xs tracking-[0.3em] text-[#FF5A1F] mb-3">— 03</p>
+          <p className="font-mono text-xs tracking-[0.3em] text-[#FF5A1F] mb-3">— 04</p>
           <h2 className="font-display text-4xl md:text-5xl leading-none max-w-lg">{t("newsletter.title")}</h2>
           <p className="text-white/60 mt-4 max-w-md">{t("newsletter.subtitle")}</p>
 
