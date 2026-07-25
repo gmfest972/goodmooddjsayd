@@ -245,15 +245,15 @@ async def admin_newsletter_export(_=Depends(get_current_admin)):
 
 # ---------- Startup ----------
 DEFAULT_VOLUMES = [
-    {"number": "01", "title": "GOOD MOOD",          "year": "2017", "plays": "",       "description": "The origin. Where Good Mood begins.",              "listen_url": "https://soundcloud.com/s-yd-l-ma-li/good-mood-dj-sayd-gm-2017",                              "sc_track": None, "order": 1},
-    {"number": "02", "title": "GOOD MOOD VOL. 2",   "year": "2018", "plays": "16.7K",  "description": "#GM2 — @DjSayd.",                                  "listen_url": "https://soundcloud.com/s-yd-l-ma-li/good-mood-vol2-djsayd-gm2",                              "sc_track": None, "order": 2},
-    {"number": "03", "title": "NWARLAND PARTY",     "year": "2018", "plays": "40.2K",  "description": "Good Mood Vol. 3 — Nwarland Party.",               "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol-3-nwarland-party-2018-master",     "sc_track": None, "order": 3},
-    {"number": "04", "title": "REMEMBER",           "year": "2020", "plays": "7 157",  "description": "Good Mood Vol. 4 — Remember.",                     "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol-4-remember",                       "sc_track": None, "order": 4},
-    {"number": "05", "title": "NWARLAND PT.2",      "year": "2020", "plays": "73.6K",  "description": "Good Mood Vol. 5 — Nwarland Pt. 2.",               "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol5-nwarland-pt2-2020",               "sc_track": None, "order": 5},
-    {"number": "06", "title": "VIE DE CÉSAR",       "year": "2021", "plays": "200K",   "description": "Good Mood Vol. 6 — Vie de César.",                 "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol6-vie-de-cesar-2021",               "sc_track": None, "order": 6},
-    {"number": "07", "title": "GOOD MOOD VOL. 7",   "year": "2022", "plays": "102K",   "description": "Good Mood Vol. 7.",                                "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol7-2021",                            "sc_track": None, "order": 7},
-    {"number": "08", "title": "LIVE BIRTHDAY",      "year": "2022", "plays": "530K",   "description": "Good Mood Vol. 8 — feat. DJ VYBZ. Live Birthday.", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-8-feat-dj-vybz-edition-live-birthday", "sc_track": None, "order": 8},
-    {"number": "09", "title": "SUMMER BABY",        "year": "2022", "plays": "83K",    "description": "Good Mood Vol. 9 — Summer Baby.",                  "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol9-summer-baby-2022",                "sc_track": None, "order": 9},
+    {"number": "01", "title": "GOOD MOOD",          "year": "2017", "plays": "",       "description": "The origin. Where Good Mood begins.",              "cover_url": "https://i1.sndcdn.com/artworks-000225635084-6zerwt-t500x500.jpg", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/good-mood-dj-sayd-gm-2017",                              "sc_track": None, "order": 1},
+    {"number": "02", "title": "GOOD MOOD VOL. 2",   "year": "2018", "plays": "16.7K",  "description": "#GM2 — @DjSayd.",                                  "cover_url": "https://i1.sndcdn.com/artworks-TKmcgLpmn0HWRN0P-nEhfCg-t500x500.jpg", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/good-mood-vol2-djsayd-gm2",                              "sc_track": None, "order": 2},
+    {"number": "03", "title": "NWARLAND PARTY",     "year": "2018", "plays": "40.2K",  "description": "Good Mood Vol. 3 — Nwarland Party.",               "cover_url": "https://i1.sndcdn.com/artworks-000405327897-w1spib-t500x500.jpg", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol-3-nwarland-party-2018-master",     "sc_track": None, "order": 3},
+    {"number": "04", "title": "REMEMBER",           "year": "2020", "plays": "7 157",  "description": "Good Mood Vol. 4 — Remember.",                     "cover_url": "https://i1.sndcdn.com/artworks-000677300032-mc0h5u-t500x500.jpg", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol-4-remember",                       "sc_track": None, "order": 4},
+    {"number": "05", "title": "NWARLAND PT.2",      "year": "2020", "plays": "73.6K",  "description": "Good Mood Vol. 5 — Nwarland Pt. 2.",               "cover_url": "https://i1.sndcdn.com/artworks-9yPauXMVGDZvQlCA-aQ9EBw-t500x500.jpg", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol5-nwarland-pt2-2020",               "sc_track": None, "order": 5},
+    {"number": "06", "title": "VIE DE CÉSAR",       "year": "2021", "plays": "200K",   "description": "Good Mood Vol. 6 — Vie de César.",                 "cover_url": "https://i1.sndcdn.com/artworks-FZHEwf3V3EQIsksY-aLUXbQ-t500x500.jpg", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol6-vie-de-cesar-2021",               "sc_track": None, "order": 6},
+    {"number": "07", "title": "GOOD MOOD VOL. 7",   "year": "2022", "plays": "102K",   "description": "Good Mood Vol. 7.",                                "cover_url": "https://i1.sndcdn.com/artworks-k6HKcPpFlMr8qeRu-0PmtqQ-t500x500.jpg", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol7-2021",                            "sc_track": None, "order": 7},
+    {"number": "08", "title": "LIVE BIRTHDAY",      "year": "2022", "plays": "530K",   "description": "Good Mood Vol. 8 — feat. DJ VYBZ. Live Birthday.", "cover_url": "https://i1.sndcdn.com/artworks-FFfUuX9zUom4JypX-GnS6zg-t500x500.jpg", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-8-feat-dj-vybz-edition-live-birthday", "sc_track": None, "order": 8},
+    {"number": "09", "title": "SUMMER BABY",        "year": "2022", "plays": "83K",    "description": "Good Mood Vol. 9 — Summer Baby.",                  "cover_url": "https://i1.sndcdn.com/artworks-tG8iWNKSidxh7sCy-yETZyA-t500x500.jpg", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol9-summer-baby-2022",                "sc_track": None, "order": 9},
 ]
 
 DEFAULT_TOUR = [
@@ -301,6 +301,13 @@ async def startup():
                          "AMBER CITY", "NEBULA", "SIGNAL", "EQUINOX", "APEX"}
         PLAYLIST_URL = "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd"
         for v in DEFAULT_VOLUMES:
+            # Backfill cover_url for docs that don't have one yet (independent of the
+            # legacy/playlist gate below, so admin-edited docs also get covers if missing).
+            await db.catalogue.update_one(
+                {"number": v["number"], "$or": [{"cover_url": ""}, {"cover_url": {"$exists": False}}]},
+                {"$set": {"cover_url": v.get("cover_url", "")}}
+            )
+            # Full seed refresh only for still-seeded (non-admin-edited) docs
             await db.catalogue.update_one(
                 {"number": v["number"], "$or": [
                     {"title": {"$in": list(LEGACY_TITLES)}},
@@ -311,6 +318,7 @@ async def startup():
                     "year": v.get("year", ""),
                     "plays": v.get("plays", ""),
                     "description": v.get("description", ""),
+                    "cover_url": v.get("cover_url", ""),
                     "listen_url": v.get("listen_url", ""),
                     "sc_track": v.get("sc_track"),
                     "order": v["order"],
