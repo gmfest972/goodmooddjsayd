@@ -101,9 +101,14 @@ class TourDateIn(BaseModel):
     date: str  # ISO string
     ticket_url: Optional[str] = ""
     status: Optional[str] = "available"  # available | soldout
+    price_cents: Optional[int] = None
+    currency: Optional[str] = "eur"
 
 class TourDate(TourDateIn):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    lookup_key: Optional[str] = ""
+    stripe_product_id: Optional[str] = ""
+    stripe_price_id: Optional[str] = ""
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 class NewsletterIn(BaseModel):
@@ -210,8 +215,13 @@ async def admin_tour_list(_=Depends(get_current_admin)):
 
 @api_router.post("/admin/tour", response_model=TourDate)
 async def admin_tour_create(t: TourDateIn, _=Depends(get_current_admin)):
-    doc = TourDate(**t.model_dump())
-    await db.tour.insert_one(doc.model_dump())
+    doc = TourDate(**t.model_dump()).model_dump()
+    if doc.get("price_cents"):
+        try:
+            _sync_tour_to_stripe(doc)
+        except stripe.error.StripeError as e:
+            raise HTTPException(status_code=502, detail=f"Stripe sync failed: {e.user_message or str(e)}")
+    await db.tour.insert_one(doc)
     return doc
 
 @api_router.put("/admin/tour/{tid}", response_model=TourDate)
@@ -219,9 +229,13 @@ async def admin_tour_update(tid: str, t: TourDateIn, _=Depends(get_current_admin
     existing = await db.tour.find_one({"id": tid}, {"_id": 0})
     if not existing:
         raise HTTPException(status_code=404, detail="Not found")
-    update = t.model_dump()
-    await db.tour.update_one({"id": tid}, {"$set": update})
-    existing.update(update)
+    existing.update(t.model_dump())
+    if existing.get("price_cents"):
+        try:
+            _sync_tour_to_stripe(existing)
+        except stripe.error.StripeError as e:
+            raise HTTPException(status_code=502, detail=f"Stripe sync failed: {e.user_message or str(e)}")
+    await db.tour.update_one({"id": tid}, {"$set": existing})
     return existing
 
 @api_router.delete("/admin/tour/{tid}")
@@ -315,6 +329,45 @@ def _sync_product_to_stripe(doc: dict) -> dict:
             currency=currency,
             lookup_key=lookup_key,
             transfer_lookup_key=True,
+        )
+        doc["stripe_price_id"] = p.id
+    return doc
+
+
+def _sync_tour_to_stripe(doc: dict) -> dict:
+    """Sync a tour date as a Stripe product+price (internal ticketing).
+    Idempotent by lookup_key. Called only when price_cents is set.
+    """
+    lookup_key = doc.get("lookup_key") or f"gmt_{doc['id'][:8]}"
+    doc["lookup_key"] = lookup_key
+
+    stripe_product_id = doc.get("stripe_product_id")
+    name = f"GOOD MOOD LIVE · {doc.get('city', '')}"
+    description = f"{doc.get('venue', '')} — {doc.get('date', '')[:10]}"
+    product_kwargs = {
+        "name": name,
+        "description": description or None,
+        "metadata": {"managed_by": "goodmood", "tour_uuid": doc["id"], "type": "ticket"},
+    }
+    product_kwargs = {k: v for k, v in product_kwargs.items() if v is not None}
+    if stripe_product_id:
+        sp = stripe.Product.modify(stripe_product_id, **product_kwargs)
+    else:
+        sp = stripe.Product.create(**product_kwargs)
+        doc["stripe_product_id"] = sp.id
+
+    existing = stripe.Price.list(lookup_keys=[lookup_key], active=True, limit=1).data
+    price_cents = int(doc["price_cents"])
+    currency = (doc.get("currency") or "eur").lower()
+    if existing and (existing[0].unit_amount != price_cents or existing[0].currency != currency):
+        stripe.Price.modify(existing[0].id, active=False)
+        existing = []
+    if existing:
+        doc["stripe_price_id"] = existing[0].id
+    else:
+        p = stripe.Price.create(
+            product=sp.id, unit_amount=price_cents, currency=currency,
+            lookup_key=lookup_key, transfer_lookup_key=True,
         )
         doc["stripe_price_id"] = p.id
     return doc

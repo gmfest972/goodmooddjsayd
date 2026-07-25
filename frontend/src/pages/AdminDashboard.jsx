@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { LogOut, Plus, Pencil, Trash2, Download, Music, Calendar, Mail, ShoppingBag, Receipt } from "lucide-react";
 
 const EMPTY_VOLUME = { number: "", title: "", year: "", plays: "", description: "", cover_url: "", listen_url: "", sc_track: null, order: 0 };
-const EMPTY_TOUR = { city: "", venue: "", country: "", date: "", ticket_url: "", status: "available" };
+const EMPTY_TOUR = { city: "", venue: "", country: "", date: "", ticket_url: "", status: "available", price_cents: null, currency: "eur" };
 const EMPTY_PRODUCT = { name: "", description: "", image_url: "", price_cents: 3500, currency: "eur", category: "", variant_label: "", variants: [], active: true, order: 0 };
 
 function Modal({ open, onClose, title, children }) {
@@ -57,11 +57,28 @@ function TourForm({ initial, onSave, onCancel, t }) {
       </div>
       <input required placeholder="Venue" value={f.venue} onChange={(e) => setF({ ...f, venue: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-venue-input" />
       <input required type="datetime-local" value={f.date ? f.date.substring(0, 16) : ""} onChange={(e) => setF({ ...f, date: e.target.value + ":00Z" })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-date-input" />
-      <input placeholder="Ticket URL" value={f.ticket_url} onChange={(e) => setF({ ...f, ticket_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-ticket-input" />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Ticket price (cents · empty = external link)</label>
+          <input type="number" min="0" placeholder="e.g. 2500 for 25€" value={f.price_cents ?? ""} onChange={(e) => setF({ ...f, price_cents: e.target.value === "" ? null : parseInt(e.target.value) })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="tour-price-input" />
+        </div>
+        <div>
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Currency</label>
+          <select value={f.currency || "eur"} onChange={(e) => setF({ ...f, currency: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="tour-currency-input">
+            <option value="eur">EUR</option>
+            <option value="usd">USD</option>
+            <option value="gbp">GBP</option>
+          </select>
+        </div>
+      </div>
+      <input placeholder="External Ticket URL (used if no price set)" value={f.ticket_url} onChange={(e) => setF({ ...f, ticket_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-ticket-input" />
       <select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-status-input">
         <option value="available">available</option>
         <option value="soldout">soldout</option>
       </select>
+      <p className="text-[10px] font-mono tracking-widest text-white/40">
+        If price is set, the BILLETS button opens Stripe Checkout (internal ticketing). Otherwise it opens the external URL.
+      </p>
       <div className="flex gap-3 pt-2">
         <button type="submit" className="btn-primary flex-1" data-testid="tour-save-btn">{t("admin.save")}</button>
         <button type="button" onClick={onCancel} className="btn-ghost flex-1">{t("admin.cancel")}</button>

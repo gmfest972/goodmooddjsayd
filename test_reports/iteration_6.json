@@ -1,0 +1,48 @@
+{
+  "summary": "Iteration 6 — validated (1) footer no longer contains 'BUILT ON EMERGENT' (0 occurrences in rendered innerText), (2) Instagram goodmood.fest full share URL wired correctly (data-testid='social-ig-goodmood'), (3) new FactoryMakerStudio IG link (data-testid='social-ig-fms') present + visible, (4) TourDate backend model supports price_cents/currency and syncs to Stripe (product+price+lookup_key gmt_*), (5) POST /api/payments/checkout with tour lookup_key returns valid Stripe cs_ session, (6) Tour public UI switches BILLETS between <button>(paid, internal Stripe) and <a>(external ticket_url), (7) Admin TourForm exposes tour-price-input and tour-currency-input with helper copy. Backend: 6/6 pytest cases pass in /app/backend/tests/test_iter6.py. Regressions all green: catalogue 9 volumes with cover_url, 5 seeded tour dates render as external links, newsletter POST fires Resend (live key, log confirms 'email send failed to=...example.com Invalid to field' which is expected Resend test-mode behavior).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Landing <head>", "issues": ["public/index.html still contains <title>Emergent | Fullstack App</title> (visible in browser tab) and <meta name=description content='A product of emergent.sh'>. The rendered <body> innerText has 0 'EMERGENT' occurrences (footer text properly removed), but the browser tab title / SEO meta still expose the platform brand. User said 'no mention on the public site' — recommend updating index.html title to 'GOOD MOOD — DJ SAYD' and meta description accordingly. Emergent telemetry scripts (assets.emergent.sh/scripts/emergent-main.js, ap.emergent.sh posthog) also live in <head> — those are Emergent platform injections and may be intentional."]},
+      {"screen": "Admin TourForm modal", "issues": ["Date field uses browser-native <input type=datetime-local> picker instead of shadcn calendar (minor UX inconsistency with the rest of the design)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter6.py",
+    "/app/test_reports/pytest/iter6.xml"
+  ],
+  "verified_behaviours": [
+    "GET /api/catalogue -> 9 volumes, all with http cover_url",
+    "GET /api/tour -> 5 seeded dates",
+    "POST /api/newsletter -> {ok:true} and Resend actually called (live re_ key)",
+    "POST /api/admin/tour without price_cents -> lookup_key/stripe_* all empty, no Stripe call",
+    "POST /api/admin/tour with price_cents=2500, currency=eur -> stripe_product_id=prod_*, stripe_price_id=price_*, lookup_key=gmt_*",
+    "PUT /api/admin/tour with new price_cents=3000 -> deactivates old Stripe price, creates new price_*, lookup_key preserved",
+    "POST /api/payments/checkout with tour lookup_key gmt_* -> 200, checkout_url contains stripe.com, session_id=cs_*, payment_transactions row persisted",
+    "POST /api/payments/checkout with bogus lookup_key -> 404",
+    "Landing footer: data-testid='social-ig-goodmood' href EXACTLY matches https://www.instagram.com/goodmood.fest?igsh=MTY5NHp2YnpocHZ3NQ%3D%3D&utm_source=qr",
+    "Landing footer: data-testid='social-ig-fms' present with href https://www.instagram.com/factorymakerstudio?igsh=MXVmY2htYnFiamplaA== and visible text 'INSTAGRAM · @FACTORYMAKERSTUDIO →'",
+    "Landing body innerText contains 0 occurrences of 'EMERGENT' (footer BUILT ON EMERGENT successfully removed)",
+    "Tour public UI: 5 seeded tour dates (no price_cents) all render as <a data-testid='tour-tickets-{i}'> external links (regression preserved)",
+    "Admin login (admin@goodmood.com / GoodMood2026) succeeds, redirects to /admin",
+    "Admin TourForm modal renders data-testid='tour-price-input' and 'tour-currency-input' with helper copy explaining the switch behaviour"
+  ],
+  "critical_code_review_comments": [
+    "public/index.html has hardcoded <title>Emergent | Fullstack App</title> — should be branded per user request",
+    "server.py:219 uses `if doc.get('price_cents')` which treats 0 as falsy — a free ticket (price_cents=0) would silently NOT sync to Stripe. Low risk (no zero-price use case yet) but worth noting",
+    "server.py is ~660 lines — approaching the 700 split threshold; consider modularising (auth/catalogue/tour/merch/payments/webhook) before further growth",
+    "_sync_tour_to_stripe is nearly identical to _sync_product_to_stripe — could be DRY'd into a single helper that takes name/desc/metadata factories",
+    "Tour.jsx buyTicket does not surface a friendly localized error toast label; falls back to raw err.response?.data?.detail",
+    "Admin TourForm date field uses native input; inconsistent with app's shadcn dark UI language"
+  ],
+  "updated_files": ["/app/backend/tests/test_iter6.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@goodmood.com / GoodMood2026 (from /app/backend/.env)",
+  "seed_data_creation": "Newsletter subscriber TEST_iter6_regression@example.com; TEST_NoPriceCity and TEST_PriceCity tour dates were created and deleted during tests (cleanup handled in test bodies).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter6 canonical regression suite is /app/backend/tests/test_iter6.py (run with: pytest backend/tests/test_iter6.py -v -o addopts=''). Prior suites: test_iter5.py (empty merch + newsletter), test_merch_payments.py, test_catalogue_real_data.py. Stripe key is live-test and Resend key is live — Resend rejects example.com (expected). If retesting tour Stripe integration, the _sync_tour_to_stripe helper reuses lookup_keys of form gmt_<uuid8>; deactivating old prices is verified in test_tour_create_with_price_syncs_stripe. Note: the visible footer no longer references EMERGENT, but public/index.html still has <title>Emergent | Fullstack App</title> and <meta description='A product of emergent.sh'> — main agent may want to update those if the user's 'no mention on the site' interpretation is strict.",
+  "rca of the issue": "N/A — all in-scope tests pass. Only observations: (a) index.html <title>/meta still say 'Emergent' — main agent to update if strict, (b) `if doc.get('price_cents')` truthy check would skip Stripe sync for price_cents=0 (free tickets)."
+}

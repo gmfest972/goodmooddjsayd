@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import api from "@/api";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 function fmtDate(iso, lang) {
   try {
@@ -12,13 +13,37 @@ function fmtDate(iso, lang) {
   }
 }
 
+function formatPrice(cents, currency = "eur") {
+  const amount = (cents || 0) / 100;
+  const symbol = (currency || "eur").toLowerCase() === "eur" ? "€" : currency.toUpperCase();
+  return `${amount.toFixed(0)}${symbol}`;
+}
+
 export default function Tour() {
   const { t, i18n } = useTranslation();
   const [items, setItems] = useState([]);
+  const [busy, setBusy] = useState(null);
 
   useEffect(() => {
     api.get("/tour").then((r) => setItems(r.data)).catch(() => {});
   }, []);
+
+  const buyTicket = async (d, idx) => {
+    if (!d.lookup_key) return;
+    setBusy(idx);
+    try {
+      const { data } = await api.post("/payments/checkout", {
+        lookup_key: d.lookup_key,
+        quantity: 1,
+        variant: `${d.city} — ${fmtDate(d.date, i18n.language)}`,
+        origin_url: window.location.origin,
+      });
+      window.location.href = data.checkout_url;
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Checkout failed");
+      setBusy(null);
+    }
+  };
 
   return (
     <section id="tour" className="px-8 md:px-12 py-24" data-testid="tour-section">
@@ -48,12 +73,27 @@ export default function Tour() {
             <div className="flex-1">
               <div className="font-display text-3xl leading-none">{d.city}</div>
               <div className="text-sm text-white/50 mt-1">{d.venue}{d.country ? ` — ${d.country}` : ""}</div>
+              {d.price_cents ? (
+                <div className="mt-2 font-mono text-[10px] tracking-[0.25em] text-[#FF5A1F]">
+                  {formatPrice(d.price_cents, d.currency)}
+                </div>
+              ) : null}
             </div>
             <div className="w-full md:w-auto">
               {d.status === "soldout" ? (
                 <span className="font-mono text-xs tracking-[0.2em] text-white/40" data-testid={`tour-soldout-${idx}`}>
                   {t("tour.soldout")}
                 </span>
+              ) : d.lookup_key && d.price_cents ? (
+                <button
+                  onClick={() => buyTicket(d, idx)}
+                  disabled={busy === idx}
+                  className="btn-primary inline-flex items-center gap-2 disabled:opacity-60"
+                  data-testid={`tour-tickets-${idx}`}
+                >
+                  {busy === idx ? <Loader2 size={14} className="animate-spin" /> : null}
+                  {t("tour.tickets")} <ArrowUpRight size={14} />
+                </button>
               ) : (
                 <a
                   href={d.ticket_url || "#"}

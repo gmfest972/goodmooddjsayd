@@ -92,11 +92,14 @@ export default function Landing() {
           <div>
             <p className="font-mono text-[10px] tracking-[0.3em] text-[#FF5A1F] mb-4">— FOLLOW</p>
             <div className="flex flex-col gap-2 font-mono text-xs tracking-widest text-white/60">
-              <a href="https://www.instagram.com/goodmood.fest" target="_blank" rel="noreferrer" className="hover:text-[#FF5A1F] transition-colors" data-testid="social-ig-goodmood">
+              <a href="https://www.instagram.com/goodmood.fest?igsh=MTY5NHp2YnpocHZ3NQ%3D%3D&utm_source=qr" target="_blank" rel="noreferrer" className="hover:text-[#FF5A1F] transition-colors" data-testid="social-ig-goodmood">
                 INSTAGRAM · @GOODMOOD.FEST →
               </a>
-              <a href="https://www.instagram.com/sayd_artist" target="_blank" rel="noreferrer" className="hover:text-[#FF5A1F] transition-colors" data-testid="social-ig-sayd">
+              <a href="https://www.instagram.com/sayd_artist?igsh=MWk5YnJqMGVocHNtbA%3D%3D&utm_source=qr" target="_blank" rel="noreferrer" className="hover:text-[#FF5A1F] transition-colors" data-testid="social-ig-sayd">
                 INSTAGRAM · @SAYD_ARTIST →
+              </a>
+              <a href="https://www.instagram.com/factorymakerstudio?igsh=MXVmY2htYnFiamplaA==" target="_blank" rel="noreferrer" className="hover:text-[#FF5A1F] transition-colors" data-testid="social-ig-fms">
+                INSTAGRAM · @FACTORYMAKERSTUDIO →
               </a>
               <a href="https://youtube.com/@djsaydvevo8145" target="_blank" rel="noreferrer" className="hover:text-[#FF5A1F] transition-colors" data-testid="social-vevo">
                 YOUTUBE · DJ SAYD VEVO →
@@ -116,7 +119,7 @@ export default function Landing() {
         </div>
         <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/5 flex justify-between items-center">
           <p className="font-mono text-[10px] tracking-[0.25em] text-white/40">{t("footer.rights")}</p>
-          <p className="font-mono text-[10px] tracking-[0.25em] text-white/30">DESIGNED IN THE DARK · BUILT ON EMERGENT</p>
+          <p className="font-mono text-[10px] tracking-[0.25em] text-white/30">DESIGNED IN THE DARK</p>
         </div>
       </footer>
     </div>
