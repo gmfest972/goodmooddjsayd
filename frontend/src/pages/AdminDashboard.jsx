@@ -7,7 +7,7 @@ import { LogOut, Plus, Pencil, Trash2, Download, Music, Calendar, Mail, Shopping
 
 const EMPTY_VOLUME = { number: "", title: "", year: "", plays: "", description: "", cover_url: "", listen_url: "", sc_track: null, order: 0 };
 const EMPTY_TOUR = { city: "", venue: "", country: "", date: "", ticket_url: "", status: "available" };
-const EMPTY_PRODUCT = { name: "", description: "", image_url: "", price_cents: 3500, currency: "eur", sizes: ["S", "M", "L", "XL"], active: true, order: 0 };
+const EMPTY_PRODUCT = { name: "", description: "", image_url: "", price_cents: 3500, currency: "eur", category: "", variant_label: "", variants: [], active: true, order: 0 };
 
 function Modal({ open, onClose, title, children }) {
   if (!open) return null;
@@ -72,10 +72,10 @@ function TourForm({ initial, onSave, onCancel, t }) {
 
 function ProductForm({ initial, onSave, onCancel, t }) {
   const [f, setF] = useState(initial || EMPTY_PRODUCT);
-  const sizesStr = (f.sizes || []).join(", ");
+  const variantsStr = (f.variants || f.sizes || []).join(", ");
   return (
     <form onSubmit={(e) => { e.preventDefault(); onSave(f); }} className="space-y-3" data-testid="product-form">
-      <input required placeholder="Product name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="product-name-input" />
+      <input required placeholder="Product name (Vinyl, Print, Tee, Cap, Ticket…)" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="product-name-input" />
       <textarea placeholder="Description" value={f.description || ""} onChange={(e) => setF({ ...f, description: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm min-h-20" data-testid="product-desc-input" />
       <input placeholder="Image URL" value={f.image_url || ""} onChange={(e) => setF({ ...f, image_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="product-image-input" />
       <div className="grid grid-cols-3 gap-3">
@@ -96,9 +96,19 @@ function ProductForm({ initial, onSave, onCancel, t }) {
           <input type="number" value={f.order} onChange={(e) => setF({ ...f, order: parseInt(e.target.value) || 0 })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="product-order-input" />
         </div>
       </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Category (free)</label>
+          <input placeholder="Apparel · Vinyl · Print · Ticket…" value={f.category || ""} onChange={(e) => setF({ ...f, category: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="product-category-input" />
+        </div>
+        <div>
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Variant label</label>
+          <input placeholder="SIZE · FORMAT · COLOR · EDITION…" value={f.variant_label || ""} onChange={(e) => setF({ ...f, variant_label: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="product-variantlabel-input" />
+        </div>
+      </div>
       <div>
-        <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Sizes (comma separated)</label>
-        <input value={sizesStr} onChange={(e) => setF({ ...f, sizes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="product-sizes-input" />
+        <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Variants (comma separated · leave empty for no selector)</label>
+        <input value={variantsStr} onChange={(e) => setF({ ...f, variants: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="product-variants-input" placeholder='e.g. S, M, L  ·  or  12", 7"  ·  or leave empty' />
       </div>
       <label className="flex items-center gap-2 text-sm text-white/70">
         <input type="checkbox" checked={!!f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} data-testid="product-active-input" />
@@ -367,7 +377,7 @@ export default function AdminDashboard() {
                   <tr>
                     <th className="text-left px-4 py-3">PRODUCT</th>
                     <th className="text-left px-4 py-3 hidden md:table-cell">PRICE</th>
-                    <th className="text-left px-4 py-3 hidden md:table-cell">SIZES</th>
+                    <th className="text-left px-4 py-3 hidden md:table-cell">VARIANTS</th>
                     <th className="text-left px-4 py-3">STATUS</th>
                     <th className="text-right px-4 py-3"></th>
                   </tr>
@@ -394,7 +404,7 @@ export default function AdminDashboard() {
                       <td className="px-4 py-3 hidden md:table-cell font-mono text-[#FF5A1F] text-xs">
                         {(p.price_cents / 100).toFixed(0)} {p.currency?.toUpperCase()}
                       </td>
-                      <td className="px-4 py-3 hidden md:table-cell text-white/50 font-mono text-xs">{(p.sizes || []).join(" · ")}</td>
+                      <td className="px-4 py-3 hidden md:table-cell text-white/50 font-mono text-xs">{(p.variants || p.sizes || []).join(" · ") || "—"}</td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-mono ${p.active ? "text-emerald-400" : "text-white/40"}`}>
                           {p.active ? "active" : "inactive"}

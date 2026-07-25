@@ -12,8 +12,9 @@ function formatPrice(cents, currency = "eur") {
 
 function ProductCard({ product }) {
   const { t } = useTranslation();
-  const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0;
-  const [size, setSize] = useState(hasSizes ? product.sizes[0] : "");
+  const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
+  const variantLabel = (product.variant_label || t("merch.size")).toUpperCase();
+  const [variant, setVariant] = useState(hasVariants ? product.variants[0] : "");
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +24,7 @@ function ProductCard({ product }) {
       const { data } = await api.post("/payments/checkout", {
         lookup_key: product.lookup_key,
         quantity: qty,
-        size,
+        variant,
         origin_url: window.location.origin,
       });
       window.location.href = data.checkout_url;
@@ -49,7 +50,7 @@ function ProductCard({ product }) {
             </div>
           )}
           <div className="absolute top-4 left-4 font-mono text-[10px] tracking-[0.3em] text-[#FF5A1F] bg-black/60 backdrop-blur px-3 py-1.5 rounded-full">
-            {t("merch.drop")} · 001
+            {(product.category || t("merch.drop")).toUpperCase()}
           </div>
         </div>
 
@@ -57,22 +58,22 @@ function ProductCard({ product }) {
           <h3 className="font-display text-4xl md:text-5xl leading-none mb-4">{product.name}</h3>
           <p className="text-white/60 text-sm leading-relaxed mb-6">{product.description}</p>
 
-          {hasSizes && (
+          {hasVariants && (
             <div className="mb-6">
-              <p className="font-mono text-[10px] tracking-[0.3em] text-white/50 mb-3">{t("merch.size")}</p>
+              <p className="font-mono text-[10px] tracking-[0.3em] text-white/50 mb-3">{variantLabel}</p>
               <div className="flex flex-wrap gap-2">
-                {product.sizes.map((s) => (
+                {product.variants.map((v) => (
                   <button
-                    key={s}
-                    onClick={() => setSize(s)}
+                    key={v}
+                    onClick={() => setVariant(v)}
                     className={`min-w-11 h-11 px-3 rounded-full font-mono text-xs tracking-widest border transition-colors ${
-                      size === s
+                      variant === v
                         ? "bg-[#FF5A1F] border-[#FF5A1F] text-black"
                         : "border-white/15 text-white/70 hover:border-[#FF5A1F] hover:text-white"
                     }`}
-                    data-testid={`merch-size-${s}`}
+                    data-testid={`merch-variant-${v}`}
                   >
-                    {s}
+                    {v}
                   </button>
                 ))}
               </div>

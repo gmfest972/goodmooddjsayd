@@ -260,9 +260,11 @@ class ProductIn(BaseModel):
     name: str
     description: Optional[str] = ""
     image_url: Optional[str] = ""
-    price_cents: int  # EUR cents
+    price_cents: int  # cents in `currency`
     currency: str = "eur"
-    sizes: List[str] = Field(default_factory=lambda: ["S", "M", "L", "XL"])
+    category: Optional[str] = ""  # free-text: "Apparel", "Vinyl", "Print", "Ticket", "Digital", ...
+    variant_label: Optional[str] = ""  # e.g. "SIZE", "FORMAT", "COLOR", "EDITION", ""
+    variants: List[str] = Field(default_factory=list)
     active: bool = True
     order: int = 0
 
@@ -374,7 +376,7 @@ async def admin_merch_delete(pid: str, _=Depends(get_current_admin)):
 class CheckoutRequest(BaseModel):
     lookup_key: str
     quantity: int = Field(1, ge=1, le=10)
-    size: Optional[str] = ""
+    variant: Optional[str] = ""
     origin_url: str
 
 
@@ -393,12 +395,12 @@ async def create_checkout(req: CheckoutRequest):
             "FR", "US", "GB", "DE", "ES", "IT", "BE", "NL", "CH", "PT", "CA",
             "MQ", "GP", "GF", "RE", "YT", "PM", "BL", "MF", "PF", "NC"
         ]},
-        metadata={"lookup_key": req.lookup_key, "size": req.size or ""},
+        metadata={"lookup_key": req.lookup_key, "variant": req.variant or ""},
     )
     await db.payment_transactions.insert_one({
         "session_id": session.id,
         "lookup_key": req.lookup_key,
-        "size": req.size or "",
+        "variant": req.variant or "",
         "quantity": req.quantity,
         "amount_cents": (price.unit_amount or 0) * req.quantity,
         "currency": price.currency,
@@ -471,7 +473,7 @@ async def stripe_webhook(request: Request):
                 await send_order_confirmation(
                     to=email_to,
                     product_name=(product or {}).get("name") or tx.get("lookup_key") or "Good Mood item",
-                    size=tx.get("size") or "",
+                    size=tx.get("variant") or tx.get("size") or "",
                     quantity=int(tx.get("quantity") or 1),
                     amount_cents=int(tx.get("amount_cents") or 0),
                     currency=tx.get("currency") or "eur",
