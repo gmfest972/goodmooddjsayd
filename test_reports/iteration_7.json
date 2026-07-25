@@ -1,0 +1,40 @@
+{
+  "summary": "Iteration 7 hotfix verified. public/index.html now serves <title>GOOD MOOD — DJ SAYD</title>, meta description 'GOOD MOOD — DJ SAYD. Live & Records. Paris · Caraïbes · World.' (no 'emergent' substring), og:title/og:description/og:type present, favicon link points to /logo-gm.png (asset returns 200 image/png). Playwright DOM verification: document.title === 'GOOD MOOD — DJ SAYD', document.body.innerText contains 0 case-insensitive occurrences of 'emergent'. All iter6 regressions still green: catalogue returns 9 volumes, tour endpoint responds, admin login (admin@goodmood.com / GoodMood2026) succeeds, footer social-ig-goodmood + social-ig-fms hrefs preserved. 7/7 pytest cases pass in /app/backend/tests/test_iter7.py. Note (as instructed by main agent, not flagged as failure): assets.emergent.sh/scripts/emergent-main.js and posthog ap.emergent.sh remain in <head> as platform telemetry injections — these are not visible content.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter7.py",
+    "/app/test_reports/pytest/iter7.xml"
+  ],
+  "verified_behaviours": [
+    "GET / -> <title>GOOD MOOD — DJ SAYD</title>",
+    "GET / -> <meta name=description content='GOOD MOOD — DJ SAYD. Live & Records. Paris · Caraïbes · World.'> (no 'emergent')",
+    "GET / -> og:title, og:description, og:type meta tags all present",
+    "GET / -> <link rel=icon href=/logo-gm.png>; GET /logo-gm.png -> 200 image/png",
+    "Rendered document.title in browser === 'GOOD MOOD — DJ SAYD'",
+    "document.body.innerText contains 0 occurrences of 'emergent' (case-insensitive)",
+    "Iter6 regression: GET /api/catalogue -> 9 volumes with http cover_url",
+    "Iter6 regression: GET /api/tour -> 200 list",
+    "Iter6 regression: POST /api/auth/login admin creds -> 200",
+    "Iter6 regression: social-ig-goodmood href = https://www.instagram.com/goodmood.fest?igsh=MTY5NHp2YnpocHZ3NQ%3D%3D&utm_source=qr",
+    "Iter6 regression: social-ig-fms href = https://www.instagram.com/factorymakerstudio?igsh=MXVmY2htYnFiamplaA=="
+  ],
+  "critical_code_review_comments": [
+    "public/index.html now correctly branded — no more visible Emergent traces in title/description/OG",
+    "assets.emergent.sh/scripts/emergent-main.js and posthog ap.emergent.sh remain in <head> — main agent confirmed these are platform telemetry, not user-visible; leaving as-is per instructions",
+    "Boilerplate comment blocks (%PUBLIC_URL%, 'To begin the development, run npm start') still linger in index.html — cosmetic only, not user-visible",
+    "Carried over from iter6: server.py line 219 uses truthy check on price_cents (0 would skip Stripe sync); server.py ~660 lines nearing split threshold"
+  ],
+  "updated_files": ["/app/backend/tests/test_iter7.py", "/app/test_reports/pytest/iter7.xml"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@goodmood.com / GoodMood2026",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter7 = index.html branding hotfix (title, meta description, og:*, favicon). Regression suite: /app/backend/tests/test_iter7.py (7 tests, all pass). Prior regression: test_iter6.py (Stripe tour price sync, IG links, footer emergent removal). Full title now 'GOOD MOOD — DJ SAYD' with em-dash (U+2014). Favicon file at /app/frontend/public/logo-gm.png. Emergent platform scripts intentionally kept in <head>.",
+  "rca of the issue": "N/A — hotfix verified successfully."
+}
