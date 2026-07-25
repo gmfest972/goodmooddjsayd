@@ -1,0 +1,36 @@
+{
+  "summary": "Iter8 Billetterie & CRM tested end-to-end. Backend: 21 passed + 2 conditional skipped (both later re-validated manually via direct-Mongo ticket seed). All targets verified: /api/events public shape (id,name,price_cents,remaining,lookup_key), 5-status validation (all accepted, 'totally_wrong' -> 422), TicketType Stripe sync (lookup_key='gmtt_*', stripe_product_id='prod_*', stripe_price_id='price_*'), /api/payments/checkout requires email for tickets (422), rejects when not on_sale (400), rejects over-remaining (422 due to quantity le=10), /api/tickets/{id}/qr.png returns 200 image/png (2385 bytes), /api/scan/check invalid/valid/already_scanned all correct, /api/scan/counter/{eid} shape ok, /api/admin/fans shape ok, /api/admin/outbox/frek-id + wallet shape ok with configured_url=None (env empty). Migration ok (announced 'GOOD MOOD LIVE · Paris' etc present). Frontend: Tour section renders /api/events; BILLETS button opens TicketPicker modal with tt-option, email input, checkout button; submitting successfully redirects to real Stripe checkout URL. /scan without token redirects to /admin/login; after login, staff-scan-page + event select + START SCANNING all render. /admin dashboard shows all 6 tabs (Catalogue, Events, Fans, Store, Orders, Newsletter); Fans tab shows email/segments columns; Events tab shows seeded 'Sayd & Friends'. /ticket/{id} shows event info + QR image + USED/VALID status. CRITICAL FIX APPLIED: AdminDashboard.jsx had an orphan try{} block at line 265 (missing `const saveProduct = async (data) => {` declaration) causing 'Unexpected reserved word await' compile error that broke the ENTIRE frontend. Restored the function signature and app compiles/works.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter8.py",
+    "/app/test_reports/pytest/iter8.xml"
+  ],
+  "critical_code_review_comments": [
+    "server.py grown to 875 lines — split into routers/ (events, tickets, scan, payments, admin) for maintainability",
+    "server.py:503 event status check hardcodes {'on_sale'} — extract to constant PURCHASABLE_STATUSES for future 'presale' states",
+    "server.py:490 stripe.Price.list is used to resolve lookup_key but ticket_type.lookup_key is already stored in DB — could query mongo directly and save a Stripe API round-trip",
+    "server.py:_issue_tickets_for_session is not fully atomic — if Mongo insert succeeds but sold increment fails, over-issuance possible; wrap in a transaction or use $inc with pre-check-then-insert reversed",
+    "server.py:761 admin_orders returns entire payment_transactions collection unpaginated — add pagination for scale",
+    "frek_service + wallet_service use identical outbox pattern — extract shared base to a single generic OutboxWorker to avoid duplication",
+    "Tour.jsx already uses /api/events but /api/tour alias remains — schedule removal after all clients migrated",
+    "StaffScan.jsx: on 'invalid' from server (status 200), UI shows raw 'reason' from HTTP error path only; server responds 200 with result='invalid' so error branch never triggers — dead code",
+    "AdminDashboard.jsx now 675 lines — approaching split threshold; extract EventForm, TicketTypeForm, FansTable, EventsTab into components/admin/",
+    "index.html still injects Emergent scripts/posthog in <head> — telemetry, per prior sign-off"
+  ],
+  "updated_files": [
+    "/app/frontend/src/pages/AdminDashboard.jsx (restored missing saveProduct function declaration)",
+    "/app/backend/tests/test_iter8.py (new regression suite, 23 tests)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@goodmood.com / GoodMood2026",
+  "seed_data_creation": "One TEST ticket was inserted directly into MongoDB to validate the /api/scan/check valid→already_scanned flow, then cleaned up.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "iter8 = Billetterie & CRM. Test file /app/backend/tests/test_iter8.py (23 tests). Seeded event 'Sayd & Friends' id=0af49c4e-09c8-41d8-bf14-c1981b54a045, ticket type 'Early Bird' 15€ lookup_key=gmtt_6e301f62. FREK_ID_URL and WALLET_URL are empty in .env → outbox items keep status='pending' (retry loop skips). To test full scan flow, insert a ticket directly into db.tickets with status='valid'. AdminDashboard.jsx had a critical compile error (orphan try{} at line 265) — fixed in this iteration; if you see a similar 'Unexpected reserved word await' error, check that function declarations weren't accidentally deleted.",
+  "rca of the issue": "AdminDashboard.jsx line 265 had orphan `try {` with no enclosing function — the `const saveProduct = async (data) => {` line was accidentally deleted during the iter8 rewrite. Fixed by inserting the missing line before `try {`. Verified frontend compiles and all pages load."
+}

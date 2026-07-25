@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import api, { API } from "@/api";
 import { toast } from "sonner";
-import { LogOut, Plus, Pencil, Trash2, Download, Music, Calendar, Mail, ShoppingBag, Receipt } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, Download, Music, Calendar, Mail, ShoppingBag, Receipt, Users, ScanLine, Ticket } from "lucide-react";
 
 const EMPTY_VOLUME = { number: "", title: "", year: "", plays: "", description: "", cover_url: "", listen_url: "", sc_track: null, order: 0 };
-const EMPTY_TOUR = { city: "", venue: "", country: "", date: "", ticket_url: "", status: "available", price_cents: null, currency: "eur" };
+const EMPTY_EVENT = { name: "", city: "", country: "", venue: "", date: "", currency: "eur", capacity: 0, status: "vision", ticket_url: "" };
+const EMPTY_TT = { name: "", price_cents: 2500, quota: 100, sale_start: "", sale_end: "" };
 const EMPTY_PRODUCT = { name: "", description: "", image_url: "", price_cents: 3500, currency: "eur", category: "", variant_label: "", variants: [], active: true, order: 0 };
+const EVENT_STATUSES = ["vision", "announced", "on_sale", "sold_out", "past"];
 
 function Modal({ open, onClose, title, children }) {
   if (!open) return null;
@@ -47,40 +49,65 @@ function VolumeForm({ initial, onSave, onCancel, t }) {
   );
 }
 
-function TourForm({ initial, onSave, onCancel, t }) {
-  const [f, setF] = useState(initial || EMPTY_TOUR);
+function EventForm({ initial, onSave, onCancel, t }) {
+  const [f, setF] = useState(initial || EMPTY_EVENT);
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSave(f); }} className="space-y-3" data-testid="tour-form">
+    <form onSubmit={(e) => { e.preventDefault(); onSave(f); }} className="space-y-3" data-testid="event-form">
+      <input required placeholder="Event name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="event-name-input" />
       <div className="grid grid-cols-2 gap-3">
-        <input required placeholder="City" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className="bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-city-input" />
-        <input placeholder="Country" value={f.country} onChange={(e) => setF({ ...f, country: e.target.value })} className="bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-country-input" />
+        <input required placeholder="City" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className="bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="event-city-input" />
+        <input placeholder="Country" value={f.country} onChange={(e) => setF({ ...f, country: e.target.value })} className="bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" />
       </div>
-      <input required placeholder="Venue" value={f.venue} onChange={(e) => setF({ ...f, venue: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-venue-input" />
-      <input required type="datetime-local" value={f.date ? f.date.substring(0, 16) : ""} onChange={(e) => setF({ ...f, date: e.target.value + ":00Z" })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-date-input" />
-      <div className="grid grid-cols-2 gap-3">
+      <input required placeholder="Venue" value={f.venue} onChange={(e) => setF({ ...f, venue: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="event-venue-input" />
+      <input required type="datetime-local" value={f.date ? f.date.substring(0, 16) : ""} onChange={(e) => setF({ ...f, date: e.target.value + ":00Z" })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="event-date-input" />
+      <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Ticket price (cents · empty = external link)</label>
-          <input type="number" min="0" placeholder="e.g. 2500 for 25€" value={f.price_cents ?? ""} onChange={(e) => setF({ ...f, price_cents: e.target.value === "" ? null : parseInt(e.target.value) })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="tour-price-input" />
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Capacity (jauge)</label>
+          <input type="number" min="0" value={f.capacity} onChange={(e) => setF({ ...f, capacity: parseInt(e.target.value) || 0 })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="event-capacity-input" />
         </div>
         <div>
           <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Currency</label>
-          <select value={f.currency || "eur"} onChange={(e) => setF({ ...f, currency: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="tour-currency-input">
-            <option value="eur">EUR</option>
-            <option value="usd">USD</option>
-            <option value="gbp">GBP</option>
+          <select value={f.currency} onChange={(e) => setF({ ...f, currency: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1">
+            <option value="eur">EUR</option><option value="usd">USD</option><option value="gbp">GBP</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Status</label>
+          <select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="event-status-input">
+            {EVENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
       </div>
-      <input placeholder="External Ticket URL (used if no price set)" value={f.ticket_url} onChange={(e) => setF({ ...f, ticket_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-ticket-input" />
-      <select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tour-status-input">
-        <option value="available">available</option>
-        <option value="soldout">soldout</option>
-      </select>
+      <input placeholder="External Ticket URL (optional fallback)" value={f.ticket_url || ""} onChange={(e) => setF({ ...f, ticket_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" />
       <p className="text-[10px] font-mono tracking-widest text-white/40">
-        If price is set, the BILLETS button opens Stripe Checkout (internal ticketing). Otherwise it opens the external URL.
+        Vision = internal only · Announced = visible, "SOON" · On sale = ticket sale active · Sold out = closed · Past = archived
       </p>
       <div className="flex gap-3 pt-2">
-        <button type="submit" className="btn-primary flex-1" data-testid="tour-save-btn">{t("admin.save")}</button>
+        <button type="submit" className="btn-primary flex-1" data-testid="event-save-btn">{t("admin.save")}</button>
+        <button type="button" onClick={onCancel} className="btn-ghost flex-1">{t("admin.cancel")}</button>
+      </div>
+    </form>
+  );
+}
+
+function TicketTypeForm({ initial, eventId, onSave, onCancel, t }) {
+  const [f, setF] = useState(initial || EMPTY_TT);
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSave({ ...f, event_id: eventId }); }} className="space-y-3" data-testid="tt-form">
+      <input required placeholder="Name (Standard, VIP, Early Bird…)" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="tt-name-input" />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Price (cents)</label>
+          <input required type="number" min="0" value={f.price_cents} onChange={(e) => setF({ ...f, price_cents: parseInt(e.target.value) || 0 })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="tt-price-input" />
+        </div>
+        <div>
+          <label className="text-[10px] font-mono tracking-widest text-white/40 uppercase">Quota</label>
+          <input required type="number" min="1" value={f.quota} onChange={(e) => setF({ ...f, quota: parseInt(e.target.value) || 0 })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm mt-1" data-testid="tt-quota-input" />
+        </div>
+      </div>
+      <p className="text-[10px] font-mono tracking-widest text-white/40">Synced to Stripe on save.</p>
+      <div className="flex gap-3 pt-2">
+        <button type="submit" className="btn-primary flex-1" data-testid="tt-save-btn">{t("admin.save")}</button>
         <button type="button" onClick={onCancel} className="btn-ghost flex-1">{t("admin.cancel")}</button>
       </div>
     </form>
@@ -147,7 +174,8 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("catalogue");
   const [volumes, setVolumes] = useState([]);
-  const [tour, setTour] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [fans, setFans] = useState({ count: 0, items: [] });
   const [subs, setSubs] = useState({ count: 0, items: [] });
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState({ count: 0, items: [] });
@@ -155,15 +183,17 @@ export default function AdminDashboard() {
 
   const load = useCallback(async () => {
     try {
-      const [v, t2, n, m, o] = await Promise.all([
+      const [v, e, f, n, m, o] = await Promise.all([
         api.get("/admin/catalogue"),
-        api.get("/admin/tour"),
+        api.get("/admin/events"),
+        api.get("/admin/fans"),
         api.get("/admin/newsletter"),
         api.get("/admin/merch"),
         api.get("/admin/orders"),
       ]);
       setVolumes(v.data);
-      setTour(t2.data);
+      setEvents(e.data);
+      setFans(f.data);
       setSubs(n.data);
       setProducts(m.data);
       setOrders(o.data);
@@ -189,38 +219,49 @@ export default function AdminDashboard() {
     navigate("/admin/login");
   };
 
+  const saveTour = async () => {}; // deprecated — kept only to avoid ref errors in tour tab modal (removed)
+  const deleteTour = async () => {};
+
   const saveVolume = async (data) => {
     try {
       if (data.id) await api.put(`/admin/catalogue/${data.id}`, data);
       else await api.post("/admin/catalogue", data);
       toast.success("Saved");
-      setModal(null);
-      load();
+      setModal(null); load();
     } catch { toast.error("Save failed"); }
   };
   const deleteVolume = async (id) => {
     if (!window.confirm(t("admin.confirm"))) return;
     await api.delete(`/admin/catalogue/${id}`);
-    toast.success("Deleted");
-    load();
+    toast.success("Deleted"); load();
   };
 
-  const saveTour = async (data) => {
+  const saveEvent = async (data) => {
     try {
-      if (data.id) await api.put(`/admin/tour/${data.id}`, data);
-      else await api.post("/admin/tour", data);
+      if (data.id) await api.put(`/admin/events/${data.id}`, data);
+      else await api.post("/admin/events", data);
       toast.success("Saved");
-      setModal(null);
-      load();
-    } catch { toast.error("Save failed"); }
+      setModal(null); load();
+    } catch (err) { toast.error(err.response?.data?.detail || "Save failed"); }
   };
-  const deleteTour = async (id) => {
+  const deleteEvent = async (id) => {
     if (!window.confirm(t("admin.confirm"))) return;
-    await api.delete(`/admin/tour/${id}`);
-    toast.success("Deleted");
-    load();
+    await api.delete(`/admin/events/${id}`);
+    toast.success("Deleted"); load();
   };
-
+  const saveTicketType = async (data) => {
+    try {
+      if (data.id) await api.put(`/admin/events/${data.event_id}/ticket-types/${data.id}`, data);
+      else await api.post(`/admin/events/${data.event_id}/ticket-types`, data);
+      toast.success("Saved & synced to Stripe");
+      setModal(null); load();
+    } catch (err) { toast.error(err.response?.data?.detail || "Save failed"); }
+  };
+  const deleteTicketType = async (eventId, id) => {
+    if (!window.confirm(t("admin.confirm"))) return;
+    await api.delete(`/admin/events/${eventId}/ticket-types/${id}`);
+    toast.success("Deleted"); load();
+  };
   const saveProduct = async (data) => {
     try {
       if (data.id) await api.put(`/admin/merch/${data.id}`, data);
@@ -249,7 +290,8 @@ export default function AdminDashboard() {
 
   const TABS = [
     { key: "catalogue", label: t("admin.catalogue"), icon: Music },
-    { key: "tour", label: t("admin.tour"), icon: Calendar },
+    { key: "events", label: "Events", icon: Calendar },
+    { key: "fans", label: "Fans", icon: Users },
     { key: "merch", label: "Store", icon: ShoppingBag },
     { key: "orders", label: "Orders", icon: Receipt },
     { key: "newsletter", label: t("admin.newsletter"), icon: Mail },
@@ -340,37 +382,124 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {tab === "tour" && (
-          <div data-testid="admin-tour-tab">
+        {tab === "events" && (
+          <div data-testid="admin-events-tab">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="font-display text-4xl">{t("admin.tour")}</h1>
-              <button className="btn-primary flex items-center gap-2" onClick={() => setModal({ type: "tour", data: EMPTY_TOUR })} data-testid="add-tour-btn">
-                <Plus size={16} /> {t("admin.add")}
-              </button>
+              <h1 className="font-display text-4xl">Events</h1>
+              <div className="flex gap-3">
+                <a href="/scan" target="_blank" rel="noreferrer" className="btn-ghost inline-flex items-center gap-2" data-testid="scan-link">
+                  <ScanLine size={16} /> DOOR SCAN
+                </a>
+                <button className="btn-primary flex items-center gap-2" onClick={() => setModal({ type: "event", data: EMPTY_EVENT })} data-testid="add-event-btn">
+                  <Plus size={16} /> Add Event
+                </button>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {events.length === 0 && <div className="glass rounded-2xl p-10 text-center text-white/40 font-mono text-xs">NO EVENTS</div>}
+              {events.map((ev) => {
+                const fill = ev.total_quota > 0 ? Math.round(100 * ev.total_sold / ev.total_quota) : 0;
+                return (
+                <div key={ev.id} className="glass rounded-2xl overflow-hidden" data-testid={`admin-event-${ev.id}`}>
+                  <div className="p-5 flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className={`inline-block text-[10px] font-mono tracking-widest px-2 py-1 rounded-full ${
+                          ev.status === "on_sale" ? "bg-emerald-500/20 text-emerald-400" :
+                          ev.status === "sold_out" ? "bg-yellow-500/20 text-yellow-400" :
+                          ev.status === "past" ? "bg-white/10 text-white/40" :
+                          ev.status === "announced" ? "bg-[#FF5A1F]/20 text-[#FF5A1F]" :
+                          "bg-white/5 text-white/40"
+                        }`}>{ev.status.toUpperCase()}</span>
+                        <span className="font-mono text-[10px] text-white/50 tracking-widest">{ev.date?.substring(0, 10)}</span>
+                      </div>
+                      <h3 className="font-display text-2xl mt-1">{ev.name}</h3>
+                      <p className="text-xs text-white/50 mt-1">{ev.venue} · {ev.city}{ev.country ? ` — ${ev.country}` : ""}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-mono text-[10px] text-white/40 tracking-widest">SOLD / CAPACITY</div>
+                      <div className="font-display text-2xl">{ev.total_sold || 0}<span className="text-white/30 text-base"> / {ev.capacity || ev.total_quota}</span></div>
+                      <div className="font-mono text-[10px] text-[#FF5A1F] tracking-widest">
+                        {((ev.total_revenue_cents || 0) / 100).toFixed(0)} {ev.currency?.toUpperCase()} · {fill}% FILL
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button onClick={() => setModal({ type: "event", data: ev })} className="text-white/60 hover:text-[#FF5A1F]" data-testid={`edit-event-${ev.id}`}><Pencil size={14} /></button>
+                      <button onClick={() => deleteEvent(ev.id)} className="text-white/60 hover:text-[#C81E3A]" data-testid={`delete-event-${ev.id}`}><Trash2 size={14} /></button>
+                    </div>
+                  </div>
+                  <div className="border-t border-white/5 bg-black/30 px-5 py-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="font-mono text-[10px] tracking-widest text-white/50">TICKET TYPES</p>
+                      <button onClick={() => setModal({ type: "tt", data: { ...EMPTY_TT, event_id: ev.id }, eventId: ev.id })} className="text-xs font-mono text-[#FF5A1F] hover:text-white flex items-center gap-1" data-testid={`add-tt-${ev.id}`}>
+                        <Plus size={12} /> ADD
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {(ev.ticket_types || []).length === 0 && (
+                        <p className="text-xs text-white/30 font-mono">No ticket types yet — add one to open sales.</p>
+                      )}
+                      {(ev.ticket_types || []).map((tt) => (
+                        <div key={tt.id} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-3">
+                            <Ticket size={14} className="text-[#FF5A1F]" />
+                            <span>{tt.name}</span>
+                            <span className="font-mono text-[10px] text-white/40">{tt.sold}/{tt.quota} · {(tt.price_cents / 100).toFixed(0)}{ev.currency?.toLowerCase() === "eur" ? "€" : ev.currency?.toUpperCase()}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => setModal({ type: "tt", data: tt, eventId: ev.id })} className="text-white/50 hover:text-[#FF5A1F]" data-testid={`edit-tt-${tt.id}`}><Pencil size={12} /></button>
+                            <button onClick={() => deleteTicketType(ev.id, tt.id)} className="text-white/50 hover:text-[#C81E3A]"><Trash2 size={12} /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {tab === "fans" && (
+          <div data-testid="admin-fans-tab">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="font-display text-4xl">Fans</h1>
+                <p className="text-white/50 font-mono text-xs mt-2 tracking-[0.2em]">{fans.count} FANS · CRM</p>
+              </div>
             </div>
             <div className="glass rounded-2xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-black/40 text-xs font-mono tracking-[0.2em] text-white/50">
                   <tr>
-                    <th className="text-left px-4 py-3">DATE</th>
-                    <th className="text-left px-4 py-3">CITY</th>
-                    <th className="text-left px-4 py-3 hidden md:table-cell">VENUE</th>
-                    <th className="text-left px-4 py-3">STATUS</th>
-                    <th className="text-right px-4 py-3"></th>
+                    <th className="text-left px-4 py-3">EMAIL</th>
+                    <th className="text-left px-4 py-3 hidden md:table-cell">NAME</th>
+                    <th className="text-left px-4 py-3">EVENTS</th>
+                    <th className="text-left px-4 py-3 hidden md:table-cell">CITIES</th>
+                    <th className="text-left px-4 py-3">SEGMENTS</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tour.map((d) => (
-                    <tr key={d.id} className="border-t border-white/5" data-testid={`admin-tour-row-${d.id}`}>
-                      <td className="px-4 py-3 font-mono text-[#FF5A1F] text-xs">{d.date?.substring(0, 10)}</td>
-                      <td className="px-4 py-3">{d.city}</td>
-                      <td className="px-4 py-3 hidden md:table-cell text-white/50">{d.venue}</td>
+                  {fans.items.length === 0 && (
+                    <tr><td colSpan="5" className="px-4 py-8 text-center text-white/30 font-mono text-xs">NO FANS YET — SELL A TICKET</td></tr>
+                  )}
+                  {fans.items.map((f) => (
+                    <tr key={f.email} className="border-t border-white/5" data-testid={`fan-row-${f.email}`}>
+                      <td className="px-4 py-3">{f.email}</td>
+                      <td className="px-4 py-3 hidden md:table-cell text-white/70">{f.name || "—"}</td>
+                      <td className="px-4 py-3 font-mono text-[#FF5A1F]">{f.total_events}</td>
+                      <td className="px-4 py-3 hidden md:table-cell text-white/50 text-xs">{(f.cities || []).join(", ")}</td>
                       <td className="px-4 py-3">
-                        <span className={`text-xs font-mono ${d.status === "soldout" ? "text-white/40" : "text-emerald-400"}`}>{d.status}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right space-x-2">
-                        <button onClick={() => setModal({ type: "tour", data: d })} className="text-white/60 hover:text-[#FF5A1F]" data-testid={`edit-tour-${d.id}`}><Pencil size={14} /></button>
-                        <button onClick={() => deleteTour(d.id)} className="text-white/60 hover:text-[#C81E3A]" data-testid={`delete-tour-${d.id}`}><Trash2 size={14} /></button>
+                        <div className="flex gap-1 flex-wrap">
+                          {(f.segments || []).map((s) => (
+                            <span key={s} className={`text-[9px] font-mono tracking-widest px-2 py-0.5 rounded-full ${
+                              s === "vip" ? "bg-[#FF5A1F]/20 text-[#FF5A1F]" :
+                              s === "recurring" ? "bg-emerald-500/20 text-emerald-400" :
+                              "bg-white/10 text-white/60"
+                            }`}>{s.toUpperCase()}</span>
+                          ))}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -532,8 +661,11 @@ export default function AdminDashboard() {
       <Modal open={modal?.type === "volume"} onClose={() => setModal(null)} title={modal?.data?.id ? t("admin.edit") : t("admin.add")}>
         {modal?.type === "volume" && <VolumeForm initial={modal.data} onSave={saveVolume} onCancel={() => setModal(null)} t={t} />}
       </Modal>
-      <Modal open={modal?.type === "tour"} onClose={() => setModal(null)} title={modal?.data?.id ? t("admin.edit") : t("admin.add")}>
-        {modal?.type === "tour" && <TourForm initial={modal.data} onSave={saveTour} onCancel={() => setModal(null)} t={t} />}
+      <Modal open={modal?.type === "event"} onClose={() => setModal(null)} title={modal?.data?.id ? "Edit event" : "Add event"}>
+        {modal?.type === "event" && <EventForm initial={modal.data} onSave={saveEvent} onCancel={() => setModal(null)} t={t} />}
+      </Modal>
+      <Modal open={modal?.type === "tt"} onClose={() => setModal(null)} title={modal?.data?.id ? "Edit ticket type" : "Add ticket type"}>
+        {modal?.type === "tt" && <TicketTypeForm initial={modal.data} eventId={modal.eventId} onSave={saveTicketType} onCancel={() => setModal(null)} t={t} />}
       </Modal>
       <Modal open={modal?.type === "product"} onClose={() => setModal(null)} title={modal?.data?.id ? t("admin.edit") : t("admin.add")}>
         {modal?.type === "product" && <ProductForm initial={modal.data} onSave={saveProduct} onCancel={() => setModal(null)} t={t} />}

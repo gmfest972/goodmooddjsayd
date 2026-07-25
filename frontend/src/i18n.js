@@ -23,6 +23,7 @@ const resources = {
         subtitle: "PARIS • CARAÏBES • MONDE",
         tickets: "BILLETS",
         soldout: "COMPLET",
+        soon: "BIENTÔT",
       },
       merch: {
         title: "STORE",
@@ -68,7 +69,7 @@ const resources = {
       nav: { catalogue: "Catalogue", tour: "Tour", merch: "Store", newsletter: "Newsletter", admin: "Admin" },
       hero: { line1: "GOOD", line2: "MOOD", tag: "DJ SAYD — LIVE & RECORDS", cta: "JOIN IN", scroll: "SCROLL" },
       catalogue: { title: "CATALOGUE", subtitle: "9 VOLUMES — PARIS • CARIBBEAN • WORLD", listen: "LISTEN", volume: "VOL." },
-      tour: { title: "LIVE EXPERIENCE", subtitle: "PARIS • CARIBBEAN • WORLD", tickets: "TICKETS", soldout: "SOLD OUT" },
+      tour: { title: "LIVE EXPERIENCE", subtitle: "PARIS • CARIBBEAN • WORLD", tickets: "TICKETS", soldout: "SOLD OUT", soon: "SOON" },
       merch: { title: "STORE", subtitle: "DROPS · LIMITED PIECES", drop: "DROP", size: "SIZE", qty: "QUANTITY", total: "TOTAL", buy: "BUY NOW" },
       newsletter: {
         title: "JOIN THE MOVEMENT",
@@ -93,7 +94,7 @@ const resources = {
       nav: { catalogue: "Catálogo", tour: "Gira", merch: "Tienda", newsletter: "Newsletter", admin: "Admin" },
       hero: { line1: "GOOD", line2: "MOOD", tag: "DJ SAYD — LIVE & RECORDS", cta: "UNIRSE", scroll: "SCROLL" },
       catalogue: { title: "CATÁLOGO", subtitle: "9 VOLÚMENES — PARIS • CARIBE • MUNDO", listen: "ESCUCHAR", volume: "VOL." },
-      tour: { title: "LIVE EXPERIENCE", subtitle: "PARIS • CARIBE • MUNDO", tickets: "ENTRADAS", soldout: "AGOTADO" },
+      tour: { title: "LIVE EXPERIENCE", subtitle: "PARIS • CARIBE • MUNDO", tickets: "ENTRADAS", soldout: "AGOTADO", soon: "PRONTO" },
       merch: { title: "TIENDA", subtitle: "DROPS · PIEZAS LIMITADAS", drop: "DROP", size: "TALLA", qty: "CANTIDAD", total: "TOTAL", buy: "COMPRAR" },
       newsletter: {
         title: "ÚNETE AL MOVIMIENTO",
@@ -118,7 +119,7 @@ const resources = {
       nav: { catalogue: "Katalòg", tour: "Toune", merch: "Boutik", newsletter: "Newsletter", admin: "Admin" },
       hero: { line1: "GOOD", line2: "MOOD", tag: "DJ SAYD — LIVE & DIS", cta: "ANTRE", scroll: "SCROLL" },
       catalogue: { title: "KATALÒG", subtitle: "9 VOLIM — PARIS • KARAYIB • LEMOND", listen: "KOUTE", volume: "VOL." },
-      tour: { title: "LIVE EXPERIENCE", subtitle: "PARIS • KARAYIB • LEMOND", tickets: "BILÈ", soldout: "FINI" },
+      tour: { title: "LIVE EXPERIENCE", subtitle: "PARIS • KARAYIB • LEMOND", tickets: "BILÈ", soldout: "FINI", soon: "TALÈ" },
       merch: { title: "BOUTIK", subtitle: "DROPS · PYÈS LIMITE", drop: "DROP", size: "GWOSÈ", qty: "KANTITE", total: "TOTAL", buy: "ACHTE" },
       newsletter: {
         title: "ANTRE NAN MOUVMAN AN",

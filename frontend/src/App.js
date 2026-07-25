@@ -7,6 +7,8 @@ import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import PaymentCancel from "@/pages/PaymentCancel";
+import TicketView from "@/pages/TicketView";
+import StaffScan from "@/pages/StaffScan";
 import { Toaster } from "sonner";
 
 function App() {
@@ -17,6 +19,8 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/scan" element={<StaffScan />} />
+          <Route path="/ticket/:id" element={<TicketView />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/cancel" element={<PaymentCancel />} />
         </Routes>
