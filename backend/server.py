@@ -18,6 +18,7 @@ import stripe
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from typing import List, Optional
+from email_service import send_newsletter_welcome, send_order_confirmation
 
 
 # MongoDB
@@ -139,6 +140,11 @@ async def public_newsletter(payload: NewsletterIn):
         return {"ok": True, "already": True}
     sub = NewsletterSubscriber(email=email, lang=payload.lang or "fr")
     await db.newsletter.insert_one(sub.model_dump())
+    # Fire welcome email (no-op if RESEND_API_KEY not set)
+    try:
+        await send_newsletter_welcome(to=email, lang=payload.lang or "fr")
+    except Exception as e:  # noqa: BLE001
+        logging.warning("newsletter welcome email failed: %s", e)
     return {"ok": True, "already": False}
 
 
@@ -560,24 +566,7 @@ async def startup():
             await db.tour.insert_one(doc)
         logging.info("Seeded default tour dates")
 
-    # Seed merch (only if empty) — first Good Mood tee
-    if await db.products.count_documents({}) == 0:
-        first = Product(
-            name="Good Mood Tee — Vol.1",
-            description="Heavyweight 240gsm cotton tee. Screen-printed Good Mood emblem on chest, tour cities on back. Unisex fit.",
-            image_url="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&auto=format&fit=crop",
-            price_cents=3500,
-            currency="eur",
-            sizes=["S", "M", "L", "XL"],
-            active=True,
-            order=1,
-        ).model_dump()
-        try:
-            first = _sync_product_to_stripe(first)
-            await db.products.insert_one(first)
-            logging.info("Seeded first Good Mood tee (Stripe synced)")
-        except Exception as e:
-            logging.warning("Merch seed Stripe sync failed: %s", e)
+    # Merch: NO seed by default — admin adds real products via CRM
 
     # Indexes
     await db.newsletter.create_index("email", unique=True)

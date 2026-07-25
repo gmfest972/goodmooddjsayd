@@ -26,7 +26,7 @@ const resources = {
       },
       merch: {
         title: "STORE",
-        subtitle: "MERCH · ÉDITIONS LIMITÉES",
+        subtitle: "DROPS · ÉDITIONS LIMITÉES",
         drop: "DROP",
         size: "TAILLE",
         qty: "QUANTITÉ",
@@ -69,7 +69,7 @@ const resources = {
       hero: { line1: "GOOD", line2: "MOOD", tag: "DJ SAYD — LIVE & RECORDS", cta: "JOIN IN", scroll: "SCROLL" },
       catalogue: { title: "CATALOGUE", subtitle: "9 VOLUMES — PARIS • CARIBBEAN • WORLD", listen: "LISTEN", volume: "VOL." },
       tour: { title: "LIVE EXPERIENCE", subtitle: "PARIS • CARIBBEAN • WORLD", tickets: "TICKETS", soldout: "SOLD OUT" },
-      merch: { title: "STORE", subtitle: "MERCH · LIMITED EDITIONS", drop: "DROP", size: "SIZE", qty: "QUANTITY", total: "TOTAL", buy: "BUY NOW" },
+      merch: { title: "STORE", subtitle: "DROPS · LIMITED PIECES", drop: "DROP", size: "SIZE", qty: "QUANTITY", total: "TOTAL", buy: "BUY NOW" },
       newsletter: {
         title: "JOIN THE MOVEMENT",
         subtitle: "Get notified about releases, dates and exclusive drops.",
@@ -94,7 +94,7 @@ const resources = {
       hero: { line1: "GOOD", line2: "MOOD", tag: "DJ SAYD — LIVE & RECORDS", cta: "UNIRSE", scroll: "SCROLL" },
       catalogue: { title: "CATÁLOGO", subtitle: "9 VOLÚMENES — PARIS • CARIBE • MUNDO", listen: "ESCUCHAR", volume: "VOL." },
       tour: { title: "LIVE EXPERIENCE", subtitle: "PARIS • CARIBE • MUNDO", tickets: "ENTRADAS", soldout: "AGOTADO" },
-      merch: { title: "TIENDA", subtitle: "MERCH · EDICIONES LIMITADAS", drop: "DROP", size: "TALLA", qty: "CANTIDAD", total: "TOTAL", buy: "COMPRAR" },
+      merch: { title: "TIENDA", subtitle: "DROPS · PIEZAS LIMITADAS", drop: "DROP", size: "TALLA", qty: "CANTIDAD", total: "TOTAL", buy: "COMPRAR" },
       newsletter: {
         title: "ÚNETE AL MOVIMIENTO",
         subtitle: "Recibe avisos de lanzamientos, fechas y drops exclusivos.",
@@ -119,7 +119,7 @@ const resources = {
       hero: { line1: "GOOD", line2: "MOOD", tag: "DJ SAYD — LIVE & DIS", cta: "ANTRE", scroll: "SCROLL" },
       catalogue: { title: "KATALÒG", subtitle: "9 VOLIM — PARIS • KARAYIB • LEMOND", listen: "KOUTE", volume: "VOL." },
       tour: { title: "LIVE EXPERIENCE", subtitle: "PARIS • KARAYIB • LEMOND", tickets: "BILÈ", soldout: "FINI" },
-      merch: { title: "BOUTIK", subtitle: "MERCH · EDISYON LIMITE", drop: "DROP", size: "GWOSÈ", qty: "KANTITE", total: "TOTAL", buy: "ACHTE" },
+      merch: { title: "BOUTIK", subtitle: "DROPS · PYÈS LIMITE", drop: "DROP", size: "GWOSÈ", qty: "KANTITE", total: "TOTAL", buy: "ACHTE" },
       newsletter: {
         title: "ANTRE NAN MOUVMAN AN",
         subtitle: "Resevwa nouvèl sou sòti, dat ak drop eksklizif.",

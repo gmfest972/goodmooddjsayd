@@ -1,0 +1,43 @@
+{
+  "summary": "Iteration 5 validation of (a) global fixed 3D background, (b) empty merch auto-hide + optional sizes, (c) Resend no-op email path. Backend: 11/11 pytest cases pass in /app/backend/tests/test_iter5.py. Frontend: Playwright confirmed global-3d-bg is position:fixed z-index:0, persists at top:0 after full-page scroll, Merch section is NOT rendered when empty, catalogue shows 9 volumes, newsletter POST succeeds with success toast, admin Store tab shows correct empty state 'NO PRODUCTS — CLICK ADD'.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter5.py",
+    "/app/test_reports/pytest/iter5.xml"
+  ],
+  "verified_behaviours": [
+    "GET /api/merch returns [] (no seed on startup)",
+    "GET /api/catalogue returns 9 volumes with cover_url set",
+    "GET /api/tour returns >=5 dates",
+    "POST /api/newsletter with new email -> {ok:true, already:false} AND backend log contains 'email skipped (no RESEND_API_KEY): to=<email>' — Resend no-op path invoked",
+    "POST /api/newsletter with duplicate email -> {ok:true, already:true}, no send attempt",
+    "POST /api/admin/merch with sizes=[] persists and returns via public /api/merch with sizes=[] (Stripe product+price synced, lookup_key present)",
+    "POST /api/admin/merch with sizes=['One Size'] persists as single-size product",
+    "POST /api/payments/checkout with size='' on a no-size product creates Stripe cs_ session",
+    "POST /api/payments/checkout with bad lookup_key -> 404",
+    "GET /api/admin/merch without auth -> 401",
+    "Admin login (admin@goodmood.com / GoodMood2026) succeeds",
+    "Landing page: [data-testid='global-3d-bg'] present, computed position=fixed, z-index=0, covers viewport 1920x1080 at top:0/left:0",
+    "After scrolling to bottom of landing, the 3D bg still has getBoundingClientRect().top===0 and position=fixed (persistent across scroll)",
+    "Merch component returns null when items empty — no [data-testid='merch-section'] in DOM; no merch-size-* buttons",
+    "Newsletter form submits successfully and shows 'Tu es dans la boucle' toast",
+    "Admin Store tab renders empty-state row 'NO PRODUCTS — CLICK ADD' with Ajouter button"
+  ],
+  "critical_code_review_comments": [
+    "email_service.send_email swallows all exceptions with broad except — fine for fire-and-forget, but consider surfacing to Sentry/observability later.",
+    "server.py Line 21 imports email_service at module import time; safe because resend import is wrapped in try/except (returns None module). No change needed.",
+    "Order confirmation email is defined but NOT wired into /api/stripe/webhook (only payment_transactions doc is updated on checkout.session.completed). The review request claimed 'webhook calls send_order_confirmation' — this call is MISSING. send_order_confirmation is imported but never invoked in server.py. Low priority right now because RESEND_API_KEY is empty (would no-op anyway), but the wire-up is incomplete.",
+    "server.py is 592 lines — approaching split threshold (>700). Consider modularising routes (auth/catalogue/tour/merch/payments) before it grows.",
+    "get_current_admin returns 401 for 'not authorized' — should ideally be 403 for authenticated-but-not-admin, but acceptable for MVP.",
+    "CORS uses allow_origins from env with default '*' AND allow_credentials=True — starlette will still refuse credentials with wildcard; if credentials matter, set explicit origins. Not blocking current tests."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter5.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@goodmood.com / GoodMood2026 (from /app/backend/.env)",
+  "seed_data_creation": "Newsletter subscribers with TEST_ prefix created during tests; Merch products TEST_NoSize_Cap and TEST_OneSize_Tote created & deleted (cleanup fixtures + explicit deletes).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Prior iters 1-4 covered catalogue seed/migration, tour, admin CRUD, Stripe checkout. Iter5 test file (test_iter5.py) is the canonical regression suite for the empty-merch + newsletter-Resend-scaffold state. To run: REACT_APP_BACKEND_URL=<url> pytest backend/tests/test_iter5.py -v -o addopts=''. The pytest.ini forces xdist -n; override with -o addopts='' or install pytest-xdist. Backend logs at /var/log/supervisor/backend.*.log — grep for 'email skipped' to verify Resend no-op path. When RESEND_API_KEY is added later, the log message changes to 'email sent id=...' and no code change is needed. NOTE: send_order_confirmation is imported but not called in the Stripe webhook handler — main agent should wire this in webhook's checkout.session.completed branch if order emails are desired.",
+  "rca of the issue": "N/A — no failing issues. Minor gap: order confirmation email hook not wired in webhook (see critical_code_review_comments). Mitigation: in /api/stripe/webhook checkout.session.completed branch, after updating payment_transactions, call `await send_order_confirmation(to=customer_email, product_name=..., size=..., quantity=..., amount_cents=..., currency=...)`; product_name/size can be recovered from the payment_transactions doc via lookup_key -> products lookup."
+}

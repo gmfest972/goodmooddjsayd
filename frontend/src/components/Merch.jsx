@@ -12,7 +12,8 @@ function formatPrice(cents, currency = "eur") {
 
 function ProductCard({ product }) {
   const { t } = useTranslation();
-  const [size, setSize] = useState(product.sizes?.[0] || "M");
+  const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0;
+  const [size, setSize] = useState(hasSizes ? product.sizes[0] : "");
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -56,25 +57,27 @@ function ProductCard({ product }) {
           <h3 className="font-display text-4xl md:text-5xl leading-none mb-4">{product.name}</h3>
           <p className="text-white/60 text-sm leading-relaxed mb-6">{product.description}</p>
 
-          <div className="mb-6">
-            <p className="font-mono text-[10px] tracking-[0.3em] text-white/50 mb-3">{t("merch.size")}</p>
-            <div className="flex flex-wrap gap-2">
-              {(product.sizes || []).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSize(s)}
-                  className={`w-11 h-11 rounded-full font-mono text-xs tracking-widest border transition-colors ${
-                    size === s
-                      ? "bg-[#FF5A1F] border-[#FF5A1F] text-black"
-                      : "border-white/15 text-white/70 hover:border-[#FF5A1F] hover:text-white"
-                  }`}
-                  data-testid={`merch-size-${s}`}
-                >
-                  {s}
-                </button>
-              ))}
+          {hasSizes && (
+            <div className="mb-6">
+              <p className="font-mono text-[10px] tracking-[0.3em] text-white/50 mb-3">{t("merch.size")}</p>
+              <div className="flex flex-wrap gap-2">
+                {product.sizes.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setSize(s)}
+                    className={`min-w-11 h-11 px-3 rounded-full font-mono text-xs tracking-widest border transition-colors ${
+                      size === s
+                        ? "bg-[#FF5A1F] border-[#FF5A1F] text-black"
+                        : "border-white/15 text-white/70 hover:border-[#FF5A1F] hover:text-white"
+                    }`}
+                    data-testid={`merch-size-${s}`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="mb-6">
             <p className="font-mono text-[10px] tracking-[0.3em] text-white/50 mb-3">{t("merch.qty")}</p>

@@ -19,17 +19,20 @@ export default function Landing() {
 
   return (
     <div className="relative min-h-screen bg-[#050505] text-white">
-      <TopNav />
-
-      {/* HERO */}
-      <section className="relative h-screen w-full overflow-hidden" data-testid="hero-section">
+      {/* GLOBAL 3D BACKGROUND — fixed behind all content */}
+      <div className="fixed inset-0 z-0 pointer-events-none" data-testid="global-3d-bg">
         <Hero3DCanvas />
         <div className="grain" />
-        {/* Vignette */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          background: "radial-gradient(circle at 30% 40%, transparent 0%, rgba(5,5,5,0.7) 80%)",
+        {/* Global vignette to keep content readable when it scrolls over */}
+        <div className="absolute inset-0" style={{
+          background: "radial-gradient(ellipse at 30% 30%, transparent 0%, rgba(5,5,5,0.55) 55%, rgba(5,5,5,0.85) 100%)",
         }} />
+      </div>
 
+      <TopNav />
+
+      {/* HERO — pure text overlay, no canvas of its own */}
+      <section className="relative z-10 h-screen w-full overflow-hidden" data-testid="hero-section">
         <div className="relative z-10 h-full flex items-center px-8 md:px-16">
           <div className="max-w-4xl">
             <p className="font-mono text-xs tracking-[0.3em] text-[#FF5A1F] mb-6 flex items-center gap-3">
@@ -64,7 +67,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <div className="divider-orange" />
+      <div className="relative z-10 divider-orange" />
 
       <main className="relative z-10 max-w-7xl mx-auto">
         <Catalogue />
@@ -76,7 +79,7 @@ export default function Landing() {
         <Newsletter />
       </main>
 
-      <footer className="border-t border-white/5 py-12 px-8 md:px-12">
+      <footer className="relative z-10 border-t border-white/5 py-12 px-8 md:px-12 bg-black/40 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
           <div className="flex items-center gap-3">
             <img src="/logo-gm.png" alt="Good Mood" className="h-12 w-12 object-contain" style={{ filter: "invert(1) brightness(1.1)" }} />
