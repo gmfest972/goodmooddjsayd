@@ -15,16 +15,17 @@ Build a website + admin CRM for "GOOD MOOD" — a standalone brand (spinoff of D
 - **Integrations**: SoundCloud HTML5 Widget (catalogue playback)
 
 ## Phase 1 — DONE (2026-07-22 → 2026-07-25)
-- Hero 3D (React Three Fiber particles, mouse-parallax, orange nebula)
+- Hero 3D **global fixed background** (React Three Fiber particles) — stays immobile while all sections scroll over it
 - Marquee cities strip
 - Catalogue (9 REAL volumes with SoundCloud covers + individual track URLs) + inline SoundCloud player modal
 - Tour (5 seeded dates)
-- **Store / Merch — Stripe Checkout live** : 1 seeded tee (35€ EUR), size + qty selector, redirects to Stripe hosted checkout, `/payment/success` polls status, `/payment/cancel` returns to store
-- Newsletter capture → MongoDB (Resend deferred)
-- Language switcher (FR / EN / ES / Kreyòl) with 4-language merch keys
-- Admin CRM: JWT login, CRUD Catalogue + Tour + **Store (Stripe sync auto)** + Orders viewer + Newsletter CSV export
-- Brand identity: GM logo (nav + footer), socials (2 IG, VEVO, SoundCloud full series)
-- Payment infra: Stripe sandbox provisioned (claimable), webhook endpoint at `/api/stripe/webhook`, idempotent payment_transactions collection
+- **Store / Merch — Stripe Checkout live** — no more demo tee, admin adds real products via CRM. Sizes optional (auto-hide selector if empty)
+- Newsletter capture → MongoDB
+- **Resend email scaffold** — welcome email on newsletter signup + order confirmation email on Stripe payment. Currently no-op (RESEND_API_KEY empty). Drop key + restart → emails fire.
+- Language switcher (FR / EN / ES / Kreyòl)
+- Admin CRM: JWT login, CRUD Catalogue + Tour + Store (Stripe sync auto) + Orders viewer + Newsletter CSV export
+- Brand identity: GM logo (nav + footer), socials (2 IG, VEVO, SoundCloud)
+- Payment infra: Stripe sandbox (claimable), webhook `/api/stripe/webhook`, idempotent payment_transactions
 
 ## Phase 2 — BACKLOG (P0/P1/P2)
 ### P0 (business-critical)

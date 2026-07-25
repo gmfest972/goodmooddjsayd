@@ -462,6 +462,22 @@ async def stripe_webhook(request: Request):
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }}
         )
+        # Order confirmation email (no-op if RESEND_API_KEY not set)
+        try:
+            tx = await db.payment_transactions.find_one({"session_id": obj["id"]}, {"_id": 0})
+            email_to = (obj.get("customer_details") or {}).get("email")
+            if tx and email_to:
+                product = await db.products.find_one({"lookup_key": tx.get("lookup_key")}, {"_id": 0})
+                await send_order_confirmation(
+                    to=email_to,
+                    product_name=(product or {}).get("name") or tx.get("lookup_key") or "Good Mood item",
+                    size=tx.get("size") or "",
+                    quantity=int(tx.get("quantity") or 1),
+                    amount_cents=int(tx.get("amount_cents") or 0),
+                    currency=tx.get("currency") or "eur",
+                )
+        except Exception as e:  # noqa: BLE001
+            logging.warning("order confirmation email failed: %s", e)
     elif t == "checkout.session.async_payment_failed":
         await db.payment_transactions.update_one(
             {"session_id": obj["id"]},
