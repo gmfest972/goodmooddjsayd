@@ -15,17 +15,20 @@ Build a website + admin CRM for "GOOD MOOD" — a standalone brand (spinoff of D
 - **Integrations**: SoundCloud HTML5 Widget (catalogue playback)
 
 ## Phase 1 — DONE (2026-07-22 → 2026-07-25)
-- Hero 3D **global fixed background** (React Three Fiber particles) — stays immobile while all sections scroll over it
-- Marquee cities strip
-- Catalogue (9 REAL volumes with SoundCloud covers + individual track URLs) + inline SoundCloud player modal
-- Tour (5 seeded dates)
-- **Store / Merch — Stripe Checkout live** — no more demo tee, admin adds real products via CRM. Sizes optional (auto-hide selector if empty)
-- Newsletter capture → MongoDB
-- **Resend email scaffold** — welcome email on newsletter signup + order confirmation email on Stripe payment. Currently no-op (RESEND_API_KEY empty). Drop key + restart → emails fire.
+- Hero 3D **global fixed background** (React Three Fiber particles)
+- Catalogue (9 REAL volumes with SoundCloud covers + individual track URLs) + SC widget modal
+- **Events (ex-Tour)** with 5 statuses (vision/announced/on_sale/sold_out/past) + ticket types with Stripe sync
+- **Ticketing internal** : Stripe Checkout → QR code auto-généré → email confirmation (Resend live) → billet accessible sur `/ticket/{id}`
+- **Scan door `/scan`** : caméra html5-qrcode, statuts valid/already_scanned/invalid, compteur live
+- **Fan CRM** : auto-créé à l'achat, segments primo/recurring/vip, table admin
+- **FREK-ID outbox** : call synchrone + retry queue (backoffs 30s/2m/10m/1h/6h), pointé sur mock — flip env var quand FrekCore up
+- **CVLN Wallet outbox** : même pattern que FREK-ID
+- Store / Merch — Stripe Checkout, produits génériques (category + variant_label + variants libres)
+- Newsletter → MongoDB + Resend welcome email
 - Language switcher (FR / EN / ES / Kreyòl)
-- Admin CRM: JWT login, CRUD Catalogue + Tour + Store (Stripe sync auto) + Orders viewer + Newsletter CSV export
-- Brand identity: GM logo (nav + footer), socials (2 IG, VEVO, SoundCloud)
-- Payment infra: Stripe sandbox (claimable), webhook `/api/stripe/webhook`, idempotent payment_transactions
+- Admin CRM 6 onglets : Catalogue, Events (+ ticket types nested), Fans, Store, Orders, Newsletter
+- Brand identity : GM logo (nav + footer), socials 5 liens (2 IG + FMS + VEVO + SC)
+- Zéro trace visible d'Emergent
 
 ## Phase 2 — BACKLOG (P0/P1/P2)
 ### P0 (business-critical)
