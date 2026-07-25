@@ -5,7 +5,7 @@ import api, { API } from "@/api";
 import { toast } from "sonner";
 import { LogOut, Plus, Pencil, Trash2, Download, Music, Calendar, Mail } from "lucide-react";
 
-const EMPTY_VOLUME = { number: "", title: "", description: "", cover_url: "", listen_url: "", order: 0 };
+const EMPTY_VOLUME = { number: "", title: "", year: "", plays: "", description: "", cover_url: "", listen_url: "", sc_track: null, order: 0 };
 const EMPTY_TOUR = { city: "", venue: "", country: "", date: "", ticket_url: "", status: "available" };
 
 function Modal({ open, onClose, title, children }) {
@@ -29,6 +29,11 @@ function VolumeForm({ initial, onSave, onCancel, t }) {
         <input type="number" placeholder="Order" value={f.order} onChange={(e) => setF({ ...f, order: parseInt(e.target.value) || 0 })} className="bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-order-input" />
       </div>
       <input required placeholder="Title" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-title-input" />
+      <div className="grid grid-cols-3 gap-3">
+        <input placeholder="Year (2022)" value={f.year || ""} onChange={(e) => setF({ ...f, year: e.target.value })} className="bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-year-input" />
+        <input placeholder="Plays (530K)" value={f.plays || ""} onChange={(e) => setF({ ...f, plays: e.target.value })} className="bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-plays-input" />
+        <input type="number" placeholder="SC track idx" value={f.sc_track ?? ""} onChange={(e) => setF({ ...f, sc_track: e.target.value === "" ? null : parseInt(e.target.value) })} className="bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-sctrack-input" />
+      </div>
       <textarea placeholder="Description" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm min-h-20" data-testid="volume-desc-input" />
       <input placeholder="Cover URL" value={f.cover_url} onChange={(e) => setF({ ...f, cover_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-cover-input" />
       <input placeholder="SoundCloud URL (https://soundcloud.com/...)" value={f.listen_url} onChange={(e) => setF({ ...f, listen_url: e.target.value })} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm" data-testid="volume-listen-input" />
@@ -205,7 +210,8 @@ export default function AdminDashboard() {
                   <tr>
                     <th className="text-left px-4 py-3">#</th>
                     <th className="text-left px-4 py-3">TITLE</th>
-                    <th className="text-left px-4 py-3 hidden md:table-cell">ORDER</th>
+                    <th className="text-left px-4 py-3 hidden md:table-cell">YEAR</th>
+                    <th className="text-left px-4 py-3 hidden md:table-cell">PLAYS</th>
                     <th className="text-right px-4 py-3"></th>
                   </tr>
                 </thead>
@@ -214,7 +220,8 @@ export default function AdminDashboard() {
                     <tr key={v.id} className="border-t border-white/5" data-testid={`admin-volume-row-${v.number}`}>
                       <td className="px-4 py-3 font-mono text-[#FF5A1F]">{v.number}</td>
                       <td className="px-4 py-3">{v.title}</td>
-                      <td className="px-4 py-3 hidden md:table-cell text-white/50">{v.order}</td>
+                      <td className="px-4 py-3 hidden md:table-cell text-white/50 font-mono text-xs">{v.year || "—"}</td>
+                      <td className="px-4 py-3 hidden md:table-cell text-white/50 font-mono text-xs">{v.plays || "—"}</td>
                       <td className="px-4 py-3 text-right space-x-2">
                         <button onClick={() => setModal({ type: "volume", data: v })} className="text-white/60 hover:text-[#FF5A1F]" data-testid={`edit-volume-${v.number}`}><Pencil size={14} /></button>
                         <button onClick={() => deleteVolume(v.id)} className="text-white/60 hover:text-[#C81E3A]" data-testid={`delete-volume-${v.number}`}><Trash2 size={14} /></button>

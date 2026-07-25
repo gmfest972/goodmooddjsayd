@@ -294,11 +294,13 @@ async def startup():
             await db.catalogue.insert_one(doc)
         logging.info("Seeded 9 catalogue volumes")
     else:
-        # Migrate: force-refresh real catalogue metadata (title/year/plays/listen_url/sc_track/description)
-        # This overwrites any prior demo data with real DJ Sayd catalogue.
+        # One-time migration: only update docs still holding legacy demo titles.
+        # Never touches admin-edited records.
+        LEGACY_TITLES = {"GENESIS", "NOCTURNE", "TROPIC HEAT", "VOID PARADE",
+                         "AMBER CITY", "NEBULA", "SIGNAL", "EQUINOX", "APEX"}
         for v in DEFAULT_VOLUMES:
             await db.catalogue.update_one(
-                {"number": v["number"]},
+                {"number": v["number"], "title": {"$in": list(LEGACY_TITLES)}},
                 {"$set": {
                     "title": v["title"],
                     "year": v.get("year", ""),

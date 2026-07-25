@@ -162,7 +162,7 @@ export default function SoundCloudPlayer({ open, onClose, trackUrl, startTrack, 
             height="380"
             scrolling="no"
             frameBorder="no"
-            allow="autoplay"
+            allow="autoplay; encrypted-media"
             src={buildEmbedUrl(trackUrl, startTrack)}
             className="block"
             data-testid="sc-player-iframe"

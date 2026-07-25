@@ -17,11 +17,14 @@ Build a website + admin CRM for "GOOD MOOD" — a standalone brand (spinoff of D
 ## Phase 1 — DONE (2026-07-22 → 2026-07-24)
 - Hero 3D (React Three Fiber particles, mouse-parallax, orange nebula)
 - Marquee cities strip
-- Catalogue (9 seeded volumes) + inline SoundCloud player modal (SC.Widget API)
+- Catalogue (9 REAL volumes: GOOD MOOD → SUMMER BABY, 2017-2022, plays 7K→530K) + inline SoundCloud player modal loading the DJ Sayd playlist with `start_track` index per volume
 - Tour (5 seeded dates: Paris, Fort-de-France, Pointe-à-Pitre, Miami, London)
 - Newsletter capture → MongoDB (Resend integration deferred, awaiting API key)
 - Language switcher (FR / EN / ES / Kreyòl) with localStorage persistence
-- Admin CRM: JWT login, Catalogue CRUD, Tour CRUD, Newsletter list + CSV export
+- Admin CRM: JWT login, Catalogue CRUD (title/year/plays/sc_track/description/cover/listen_url), Tour CRUD, Newsletter list + CSV export
+- Brand identity: GM logo integrated (top-nav + footer, inverted white on dark)
+- Socials: Instagram @goodmood.fest, Instagram @sayd_artist, YouTube DJ SAYD VEVO, SoundCloud full series (footer)
+- One-shot migration: only overwrites legacy demo titles, preserves any admin edits on subsequent restarts
 
 ## Phase 2 — BACKLOG (P0/P1/P2)
 ### P0 (business-critical)
