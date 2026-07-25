@@ -245,15 +245,15 @@ async def admin_newsletter_export(_=Depends(get_current_admin)):
 
 # ---------- Startup ----------
 DEFAULT_VOLUMES = [
-    {"number": "01", "title": "GOOD MOOD",          "year": "2017", "plays": "",       "description": "The origin. Where Good Mood begins.",         "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 0, "order": 1},
-    {"number": "02", "title": "GOOD MOOD VOL. 2",   "year": "2018", "plays": "16.7K",  "description": "#GM2 — @DjSayd.",                              "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 1, "order": 2},
-    {"number": "03", "title": "NWARLAND PARTY",     "year": "2018", "plays": "40.2K",  "description": "Good Mood Vol. 3 — Nwarland Party.",          "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 2, "order": 3},
-    {"number": "04", "title": "REMEMBER",           "year": "2020", "plays": "7 157",  "description": "Good Mood Vol. 4 — Remember.",                "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 3, "order": 4},
-    {"number": "05", "title": "NWARLAND PT.2",      "year": "2020", "plays": "73.6K",  "description": "Good Mood Vol. 5 — Nwarland Pt. 2.",          "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 4, "order": 5},
-    {"number": "06", "title": "VIE DE CÉSAR",       "year": "2021", "plays": "200K",   "description": "Good Mood Vol. 6 — Vie de César.",            "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 5, "order": 6},
-    {"number": "07", "title": "GOOD MOOD VOL. 7",   "year": "2022", "plays": "102K",   "description": "Good Mood Vol. 7.",                           "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 6, "order": 7},
-    {"number": "08", "title": "LIVE BIRTHDAY",      "year": "2022", "plays": "530K",   "description": "Good Mood Vol. 8 — feat. DJ VYBZ. Live Birthday.", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 7, "order": 8},
-    {"number": "09", "title": "SUMMER BABY",        "year": "2022", "plays": "83K",    "description": "Good Mood Vol. 9 — Summer Baby.",             "listen_url": "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd", "sc_track": 8, "order": 9},
+    {"number": "01", "title": "GOOD MOOD",          "year": "2017", "plays": "",       "description": "The origin. Where Good Mood begins.",              "listen_url": "https://soundcloud.com/s-yd-l-ma-li/good-mood-dj-sayd-gm-2017",                              "sc_track": None, "order": 1},
+    {"number": "02", "title": "GOOD MOOD VOL. 2",   "year": "2018", "plays": "16.7K",  "description": "#GM2 — @DjSayd.",                                  "listen_url": "https://soundcloud.com/s-yd-l-ma-li/good-mood-vol2-djsayd-gm2",                              "sc_track": None, "order": 2},
+    {"number": "03", "title": "NWARLAND PARTY",     "year": "2018", "plays": "40.2K",  "description": "Good Mood Vol. 3 — Nwarland Party.",               "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol-3-nwarland-party-2018-master",     "sc_track": None, "order": 3},
+    {"number": "04", "title": "REMEMBER",           "year": "2020", "plays": "7 157",  "description": "Good Mood Vol. 4 — Remember.",                     "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol-4-remember",                       "sc_track": None, "order": 4},
+    {"number": "05", "title": "NWARLAND PT.2",      "year": "2020", "plays": "73.6K",  "description": "Good Mood Vol. 5 — Nwarland Pt. 2.",               "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol5-nwarland-pt2-2020",               "sc_track": None, "order": 5},
+    {"number": "06", "title": "VIE DE CÉSAR",       "year": "2021", "plays": "200K",   "description": "Good Mood Vol. 6 — Vie de César.",                 "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol6-vie-de-cesar-2021",               "sc_track": None, "order": 6},
+    {"number": "07", "title": "GOOD MOOD VOL. 7",   "year": "2022", "plays": "102K",   "description": "Good Mood Vol. 7.",                                "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol7-2021",                            "sc_track": None, "order": 7},
+    {"number": "08", "title": "LIVE BIRTHDAY",      "year": "2022", "plays": "530K",   "description": "Good Mood Vol. 8 — feat. DJ VYBZ. Live Birthday.", "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-8-feat-dj-vybz-edition-live-birthday", "sc_track": None, "order": 8},
+    {"number": "09", "title": "SUMMER BABY",        "year": "2022", "plays": "83K",    "description": "Good Mood Vol. 9 — Summer Baby.",                  "listen_url": "https://soundcloud.com/s-yd-l-ma-li/dj-sayd-good-mood-vol9-summer-baby-2022",                "sc_track": None, "order": 9},
 ]
 
 DEFAULT_TOUR = [
@@ -294,13 +294,18 @@ async def startup():
             await db.catalogue.insert_one(doc)
         logging.info("Seeded 9 catalogue volumes")
     else:
-        # One-time migration: only update docs still holding legacy demo titles.
-        # Never touches admin-edited records.
+        # One-time migration: only update docs still holding legacy demo titles OR
+        # docs still pointing at the shared playlist URL (i.e. seeded, non-admin-edited).
+        # Never touches admin-edited records (title != legacy AND listen_url != playlist).
         LEGACY_TITLES = {"GENESIS", "NOCTURNE", "TROPIC HEAT", "VOID PARADE",
                          "AMBER CITY", "NEBULA", "SIGNAL", "EQUINOX", "APEX"}
+        PLAYLIST_URL = "https://soundcloud.com/s-yd-l-ma-li/sets/good-mood-by-dj-sayd"
         for v in DEFAULT_VOLUMES:
             await db.catalogue.update_one(
-                {"number": v["number"], "title": {"$in": list(LEGACY_TITLES)}},
+                {"number": v["number"], "$or": [
+                    {"title": {"$in": list(LEGACY_TITLES)}},
+                    {"listen_url": PLAYLIST_URL},
+                ]},
                 {"$set": {
                     "title": v["title"],
                     "year": v.get("year", ""),
