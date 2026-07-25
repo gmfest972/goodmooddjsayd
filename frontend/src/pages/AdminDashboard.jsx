@@ -436,10 +436,15 @@ export default function AdminDashboard() {
                   {orders.items.length === 0 && (
                     <tr><td colSpan="6" className="px-4 py-8 text-center text-white/30 font-mono text-xs">NO ORDERS YET</td></tr>
                   )}
-                  {orders.items.map((o) => (
+                  {orders.items.map((o) => {
+                    const prod = products.find((p) => p.lookup_key === o.lookup_key);
+                    return (
                     <tr key={o.session_id} className="border-t border-white/5">
                       <td className="px-4 py-3 text-white/50 font-mono text-xs">{o.created_at?.substring(0, 10)}</td>
-                      <td className="px-4 py-3 font-mono text-xs">{o.lookup_key}</td>
+                      <td className="px-4 py-3">
+                        <div>{prod?.name || o.lookup_key}</div>
+                        <div className="text-[10px] font-mono text-white/40">{o.lookup_key}</div>
+                      </td>
                       <td className="px-4 py-3 hidden md:table-cell text-white/60 font-mono text-xs">{o.size || "—"} · x{o.quantity}</td>
                       <td className="px-4 py-3 font-mono text-[#FF5A1F] text-xs">
                         {((o.amount_cents || 0) / 100).toFixed(2)} {o.currency?.toUpperCase()}
@@ -451,7 +456,8 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-4 py-3 hidden lg:table-cell text-white/50 text-xs">{o.customer_email || "—"}</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
